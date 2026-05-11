@@ -1,10 +1,5 @@
 import { create } from 'zustand';
-
-interface Settings {
-  soundEnabled: boolean;
-  theme: 'dark' | 'light';
-  difficulty: 'easy' | 'normal' | 'hard';
-}
+import { Settings, getCachedSettings, saveSettingsToFS } from '../utils/storage';
 
 interface SettingsState extends Settings {
   toggleSound: () => void;
@@ -12,24 +7,12 @@ interface SettingsState extends Settings {
   setDifficulty: (d: Settings['difficulty']) => void;
 }
 
-const STORAGE_KEY = 'arduino-typing-tutor-settings';
-
-function loadSettings(): Settings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { soundEnabled: true, theme: 'dark', difficulty: 'normal' };
-    return { soundEnabled: true, theme: 'dark', difficulty: 'normal', ...JSON.parse(raw) };
-  } catch {
-    return { soundEnabled: true, theme: 'dark', difficulty: 'normal' };
-  }
-}
-
 function save(s: Settings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  saveSettingsToFS(s); // fire-and-forget
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => {
-  const initial = loadSettings();
+  const initial = getCachedSettings();
 
   // Apply theme on load (.light sınıfı yok = koyu tema, var = aydınlık tema)
   if (initial.theme === 'light') {

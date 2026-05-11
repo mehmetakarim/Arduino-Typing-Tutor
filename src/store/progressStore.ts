@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { UserProgress, LessonStats, AppScreen, TypingResult } from '../types';
-import { loadProgress, saveProgress, resetProgress } from '../utils/storage';
+import {
+  getCachedProgress,
+  setCachedProgress,
+  saveProgressToFS,
+  resetProgressFS,
+  defaultProgress,
+} from '../utils/storage';
 
 const ALL_BADGES = [
   { id: 'first_lesson',  check: (p: UserProgress) => p.completedLessons.length >= 1 },
@@ -16,6 +22,11 @@ function checkNewBadges(progress: UserProgress): string[] {
   return ALL_BADGES
     .filter(b => !progress.badges.includes(b.id) && b.check(progress))
     .map(b => b.id);
+}
+
+function save(progress: UserProgress) {
+  setCachedProgress(progress);
+  saveProgressToFS(progress); // fire-and-forget
 }
 
 interface ProgressState {
@@ -36,7 +47,7 @@ interface ProgressState {
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
-  progress: loadProgress(),
+  progress: getCachedProgress(),
   screen: 'menu',
   activeLessonId: null,
   lastResult: null,
@@ -63,9 +74,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       ? [...progress.completedLessons, result.lessonId]
       : progress.completedLessons;
 
-    const newStreak = result.passed
-      ? progress.currentStreak + 1
-      : 0;
+    const newStreak = result.passed ? progress.currentStreak + 1 : 0;
     const longestStreak = Math.max(progress.longestStreak, newStreak);
 
     const mergedErrorKeys = { ...progress.errorKeys };
@@ -92,7 +101,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       updated.newlyEarnedBadges = newBadges;
     }
 
-    saveProgress(updated);
+    save(updated);
     set({ progress: updated, lastResult: result, screen: 'result' });
   },
 
@@ -105,7 +114,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       updated.badges = [...updated.badges, ...newBadges];
       updated.newlyEarnedBadges = [...(updated.newlyEarnedBadges ?? []), ...newBadges];
     }
-    saveProgress(updated);
+    save(updated);
     set({ progress: updated });
   },
 
@@ -117,33 +126,33 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       updated.badges = [...updated.badges, ...newBadges];
       updated.newlyEarnedBadges = newBadges;
     }
-    saveProgress(updated);
+    save(updated);
     set({ progress: updated, screen: 'certificate' });
   },
 
   incrementFinalAttempt: () => {
     const { progress } = get();
     const updated = { ...progress, finalExamAttempts: progress.finalExamAttempts + 1 };
-    saveProgress(updated);
+    save(updated);
     set({ progress: updated });
   },
 
   addTime: (seconds) => {
     const { progress } = get();
     const updated = { ...progress, totalTimeSpent: progress.totalTimeSpent + seconds };
-    saveProgress(updated);
+    save(updated);
     set({ progress: updated });
   },
 
   clearNewBadges: () => {
     const { progress } = get();
     const updated = { ...progress, newlyEarnedBadges: [] };
-    saveProgress(updated);
+    save(updated);
     set({ progress: updated });
   },
 
   reset: () => {
-    resetProgress();
-    set({ progress: loadProgress(), screen: 'menu', activeLessonId: null, lastResult: null });
+    resetProgressFS(); // fire-and-forget, cache'i de sıfırlar
+    set({ progress: { ...defaultProgress }, screen: 'menu', activeLessonId: null, lastResult: null });
   },
 }));
