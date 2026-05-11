@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Dark theme CSS değişkenleri (varsayılan — sınıf gerekmez) ── */
+:root {
+  --bg-base:     #0A0A0A;   /* En derin arka plan */
+  --bg-surface:  #1A1A1B;   /* Kartlar, paneller */
+  --bg-elevated: #242425;   /* Hover, yükseltilmiş yüzey */
+  --bg-border:   #2E2E2F;   /* Kenarlar */
+  --bg-muted:    #141414;   /* Stats bar gibi ara yüzeyler */
+
+  --text-primary:   #F2F2F2;
+  --text-secondary: #9A9A9E;
+  --text-muted:     #5A5A5E;
+
+  --accent-blue:   #3B82F6;
+  --accent-green:  #22C55E;
+  --accent-orange: #F97316;
+  --accent-red:    #EF4444;
+  --accent-yellow: #EAB308;
+  --accent-purple: #A855F7;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Lesson & Result screen full-page backgrounds */
+.screen-bg {
+  background-color: var(--bg-base);
+}
+
+/* ── Tailwind gray sınıflarını koyu renklere yönlendir (varsayılan: koyu tema) ── */
+.bg-gray-900 { background-color: var(--bg-base) !important; }
+.bg-gray-800 { background-color: var(--bg-surface) !important; }
+.bg-gray-700 { background-color: var(--bg-elevated) !important; }
+.bg-gray-600 { background-color: #3A3A3B !important; }
+.border-gray-700 { border-color: var(--bg-border) !important; }
+.border-gray-600 { border-color: #3A3A3B !important; }
+.border-gray-800 { border-color: #1E1E1F !important; }
+.text-gray-400 { color: var(--text-secondary) !important; }
+.text-gray-500 { color: var(--text-muted) !important; }
+.text-gray-600 { color: #4A4A4E !important; }
+
+/* ── Light mode — .light sınıfı eklenince devreye girer ── */
+:root.light {
+  --bg-base:     #F3F4F6;
+  --bg-surface:  #FFFFFF;
+  --bg-elevated: #E5E7EB;
+  --bg-border:   #D1D5DB;
+  --bg-muted:    #F9FAFB;
+  --text-primary:   #111827;
+  --text-secondary: #6B7280;
+  --text-muted:     #9CA3AF;
+}
+
+:root.light body {
+  background-color: #F3F4F6;
+  color: #111827;
+}
+
+:root.light .bg-gray-900 { background-color: #F9FAFB !important; }
+:root.light .bg-gray-800 { background-color: #FFFFFF !important; }
+:root.light .bg-gray-700 { background-color: #E5E7EB !important; }
+:root.light .bg-gray-600 { background-color: #D1D5DB !important; }
+:root.light .text-white  { color: #111827 !important; }
+:root.light .text-gray-200 { color: #1F2937 !important; }
+:root.light .text-gray-400 { color: #6B7280 !important; }
+:root.light .text-gray-500 { color: #9CA3AF !important; }
+:root.light .border-gray-700 { border-color: #E5E7EB !important; }
+:root.light .border-gray-600 { border-color: #D1D5DB !important; }
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}

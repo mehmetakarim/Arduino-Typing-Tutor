@@ -1,0 +1,385 @@
+[
+  {
+    "id": 1, "moduleId": 1, "isExam": false,
+    "title": "Sol El: A, S, D, F",
+    "description": "Sol elin ev sırası tuşlarını öğreniyoruz.",
+    "targetKeys": ["a","s","d","f"],
+    "content": "aaa sss ddd fff asd fds sad fas ads fsa daf sdf",
+    "minAccuracy": 80
+  },
+  {
+    "id": 2, "moduleId": 1, "isExam": false,
+    "title": "Sol El Pratik: led, pin",
+    "description": "Arduino'nun temel kelimeleri: led ve pin.",
+    "targetKeys": ["a","s","d","f","l","e","p","i","n"],
+    "content": "led led pin pin led pin led led pin led pin led pin",
+    "minAccuracy": 80
+  },
+  {
+    "id": 3, "moduleId": 1, "isExam": false,
+    "title": "Sağ El: J, K, L, Ş",
+    "description": "Sağ elin ev sırası tuşlarını öğreniyoruz.",
+    "targetKeys": ["j","k","l","ş"],
+    "content": "jjj kkk lll şşş jkl lkj jşl şlk kjş ljk şjk lkş",
+    "minAccuracy": 80
+  },
+  {
+    "id": 4, "moduleId": 1, "isExam": false,
+    "title": "Sağ El Pratik: kod, setup",
+    "description": "Arduino'da çok kullanılan: kod ve setup.",
+    "targetKeys": ["k","o","d","s","e","t","u","p"],
+    "content": "kod kod setup setup kod setup kod setup kod setup",
+    "minAccuracy": 80
+  },
+  {
+    "id": 5, "moduleId": 1, "isExam": false,
+    "title": "İki El: loop, void",
+    "description": "Her iki eli birlikte kullanmaya başlıyoruz.",
+    "targetKeys": ["l","o","p","v","i","d"],
+    "content": "loop loop void void loop void loop void loop void",
+    "minAccuracy": 82
+  },
+  {
+    "id": 6, "moduleId": 1, "isExam": false,
+    "title": "Kelime Oluşturma",
+    "description": "led, setup, loop kelimelerini pratik yapıyoruz.",
+    "targetKeys": ["a","s","d","f","j","k","l"],
+    "content": "led setup loop led loop setup led setup led loop setup",
+    "minAccuracy": 82
+  },
+  {
+    "id": 7, "moduleId": 1, "isExam": false,
+    "title": "Basit Cümleler",
+    "description": "İlk Arduino cümlelerini yazıyoruz.",
+    "targetKeys": ["a","s","d","f","j","k","l","ş"],
+    "content": "led yanar led söner led flash kod yaz led kodu setup",
+    "minAccuracy": 85
+  },
+  {
+    "id": 8, "moduleId": 1, "isExam": false,
+    "title": "Arduino Kelimeleri",
+    "description": "Tüm öğrenilen Arduino terimlerini yazıyoruz.",
+    "targetKeys": ["a","s","d","f","j","k","l"],
+    "content": "pin kod led setup loop void pin led setup loop void kod",
+    "minAccuracy": 85
+  },
+  {
+    "id": 9, "moduleId": 1, "isExam": false,
+    "title": "Hız Artırma",
+    "description": "Daha hızlı yazmak için karışık pratik.",
+    "targetKeys": ["a","s","d","f","j","k","l","ş"],
+    "content": "led pin kod setup loop void led setup loop pin void kod led",
+    "minAccuracy": 85,
+    "minWPM": 10
+  },
+  {
+    "id": 10, "moduleId": 1, "isExam": false,
+    "title": "Modül Pekiştirme",
+    "description": "Modül 1'de öğrendiklerini pekiştiriyoruz.",
+    "targetKeys": ["a","s","d","f","j","k","l","ş"],
+    "content": "led yanar setup loop void pin kod led pin setup loop void kod led",
+    "minAccuracy": 87
+  },
+  {
+    "id": 11, "moduleId": 1, "isExam": true,
+    "title": "Mini Sınav 1",
+    "description": "Modül 1 sınavı. %90 doğruluk gerekli!",
+    "targetKeys": ["a","s","d","f","j","k","l","ş"],
+    "content": "led pin setup loop void kod led setup loop void pin led kod setup",
+    "minAccuracy": 90,
+    "minWPM": 12
+  },
+  {
+    "id": 12, "moduleId": 2, "isExam": false,
+    "title": "Sol El Üst: Q, W, E, R, T",
+    "description": "Üst sıranın sol tarafını öğreniyoruz.",
+    "targetKeys": ["q","w","e","r","t"],
+    "content": "qqq www eee rrr ttt qwe rty wer ert qrt twq ewt rqw",
+    "minAccuracy": 80
+  },
+  {
+    "id": 13, "moduleId": 2, "isExam": false,
+    "title": "Sol Üst Pratik: while, write",
+    "description": "while ve write komutları.",
+    "targetKeys": ["w","h","i","l","e","r","t"],
+    "content": "while write while write while write while write",
+    "minAccuracy": 80
+  },
+  {
+    "id": 14, "moduleId": 2, "isExam": false,
+    "title": "Sağ El Üst: Y, U, I, O, P, Ğ, Ü",
+    "description": "Üst sıranın sağ tarafını öğreniyoruz.",
+    "targetKeys": ["y","u","i","o","p","ğ","ü"],
+    "content": "yyy uuu iii ooo ppp ğğğ üüü yui iop pğü uio yop",
+    "minAccuracy": 80
+  },
+  {
+    "id": 15, "moduleId": 2, "isExam": false,
+    "title": "Sağ Üst Pratik: input, output",
+    "description": "input ve output kavramlarını yazıyoruz.",
+    "targetKeys": ["i","n","p","u","t","o"],
+    "content": "input output input output input output input output",
+    "minAccuracy": 80
+  },
+  {
+    "id": 16, "moduleId": 2, "isExam": false,
+    "title": "İki El Kombine: digitalWrite, pinMode",
+    "description": "Arduino'nun en önemli komutlarını yazıyoruz.",
+    "targetKeys": ["d","i","g","t","a","l","W","r","e","P","n","M","o"],
+    "content": "digitalWrite pinMode digitalWrite pinMode digitalWrite",
+    "minAccuracy": 82
+  },
+  {
+    "id": 17, "moduleId": 2, "isExam": false,
+    "title": "Arduino Komutları",
+    "description": "setup(), loop(), delay() fonksiyonlarını yazıyoruz.",
+    "targetKeys": ["s","e","t","u","p","l","o","a","y","d"],
+    "content": "setup loop delay setup loop delay setup loop delay",
+    "minAccuracy": 82
+  },
+  {
+    "id": 18, "moduleId": 2, "isExam": false,
+    "title": "Kod Yapıları",
+    "description": "void setup() yapısını yazıyoruz.",
+    "targetKeys": ["v","o","i","d","s","e","t","u","p"],
+    "content": "void setup void loop void setup void loop void setup",
+    "minAccuracy": 85
+  },
+  {
+    "id": 19, "moduleId": 2, "isExam": false,
+    "title": "Modül 2 Pekiştirme",
+    "description": "Tüm komutları karışık olarak yazıyoruz.",
+    "targetKeys": ["q","w","e","r","t","y","u","i","o","p"],
+    "content": "while write input output digitalWrite pinMode setup loop delay",
+    "minAccuracy": 87
+  },
+  {
+    "id": 20, "moduleId": 2, "isExam": true,
+    "title": "Mini Sınav 2",
+    "description": "Modül 2 sınavı. %90 doğruluk gerekli!",
+    "targetKeys": ["q","w","e","r","t","y","u","i","o","p","ğ","ü"],
+    "content": "while write input output digitalWrite pinMode setup loop delay while input",
+    "minAccuracy": 90,
+    "minWPM": 14
+  },
+  {
+    "id": 21, "moduleId": 3, "isExam": false,
+    "title": "Sol El Alt: Z, X, C, V, B",
+    "description": "Alt sıranın sol tarafını öğreniyoruz.",
+    "targetKeys": ["z","x","c","v","b"],
+    "content": "zzz xxx ccc vvv bbb zxc cvb vxz bzc xcv bxz vcx",
+    "minAccuracy": 80
+  },
+  {
+    "id": 22, "moduleId": 3, "isExam": false,
+    "title": "Sol Alt Pratik: analogWrite, Serial",
+    "description": "analogWrite ve Serial komutlarını yazıyoruz.",
+    "targetKeys": ["a","n","l","o","g","W","r","i","t","e","S","e"],
+    "content": "analogWrite Serial analogWrite Serial analogWrite Serial",
+    "minAccuracy": 80
+  },
+  {
+    "id": 23, "moduleId": 3, "isExam": false,
+    "title": "Sağ El Alt: N, M, Ö, Ç",
+    "description": "Alt sıranın sağ tarafını öğreniyoruz.",
+    "targetKeys": ["n","m","ö","ç"],
+    "content": "nnn mmm ööö ççç nmö öçm mnö çnm nmç öçn mnç nöç",
+    "minAccuracy": 80
+  },
+  {
+    "id": 24, "moduleId": 3, "isExam": false,
+    "title": "Sağ Alt Pratik: monitor, sensor",
+    "description": "monitor ve sensor terimlerini yazıyoruz.",
+    "targetKeys": ["m","o","n","i","t","r","s","e"],
+    "content": "monitor sensor monitor sensor monitor sensor monitor",
+    "minAccuracy": 80
+  },
+  {
+    "id": 25, "moduleId": 3, "isExam": false,
+    "title": "Tüm Harfler: digitalRead, analogRead",
+    "description": "Okuma komutlarını yazıyoruz.",
+    "targetKeys": ["d","i","g","t","a","l","R","e","n","o"],
+    "content": "digitalRead analogRead digitalRead analogRead digitalRead",
+    "minAccuracy": 82
+  },
+  {
+    "id": 26, "moduleId": 3, "isExam": false,
+    "title": "Uzun Kelimeler",
+    "description": "Uzun Arduino komutlarını hızlı yazıyoruz.",
+    "targetKeys": ["d","i","g","t","a","l","W","r","e","P","n","M","o"],
+    "content": "digitalWrite pinMode analogWrite analogRead digitalRead",
+    "minAccuracy": 82
+  },
+  {
+    "id": 27, "moduleId": 3, "isExam": false,
+    "title": "Tam Komutlar",
+    "description": "Serial.begin(9600) komutunu yazıyoruz.",
+    "targetKeys": ["S","e","r","i","a","l","b","g","n"],
+    "content": "Serial begin Serial print Serial println Serial begin",
+    "minAccuracy": 85
+  },
+  {
+    "id": 28, "moduleId": 3, "isExam": false,
+    "title": "Modül 3 Pekiştirme",
+    "description": "Tüm alt sıra komutlarını karışık yazıyoruz.",
+    "targetKeys": ["z","x","c","v","b","n","m","ö","ç"],
+    "content": "analogWrite Serial monitor sensor digitalRead analogRead boolean return",
+    "minAccuracy": 87
+  },
+  {
+    "id": 29, "moduleId": 3, "isExam": true,
+    "title": "Mini Sınav 3",
+    "description": "Modül 3 sınavı. %90 doğruluk gerekli!",
+    "targetKeys": ["z","x","c","v","b","n","m","ö","ç"],
+    "content": "analogWrite Serial monitor sensor digitalRead analogRead boolean return Serial",
+    "minAccuracy": 90,
+    "minWPM": 16
+  },
+  {
+    "id": 30, "moduleId": 4, "isExam": false,
+    "title": "Sayılar: 0-5",
+    "description": "İlk sayıları öğreniyoruz.",
+    "targetKeys": ["0","1","2","3","4","5"],
+    "content": "0 1 2 3 4 5 12 34 50 123 450 321 012 543",
+    "minAccuracy": 80
+  },
+  {
+    "id": 31, "moduleId": 4, "isExam": false,
+    "title": "Sayılar: 6-9",
+    "description": "Kalan sayıları öğreniyoruz.",
+    "targetKeys": ["6","7","8","9"],
+    "content": "6 7 8 9 67 89 96 78 678 987 769 896 6789 9867",
+    "minAccuracy": 80
+  },
+  {
+    "id": 32, "moduleId": 4, "isExam": false,
+    "title": "Sayılarla Arduino: delay, pin",
+    "description": "Sayıları Arduino komutlarıyla birleştiriyoruz.",
+    "targetKeys": ["0","1","2","3","4","5","6","7","8","9"],
+    "content": "delay 1000 pin 13 delay 500 pin 9 delay 2000 pin 6",
+    "minAccuracy": 82
+  },
+  {
+    "id": 33, "moduleId": 4, "isExam": false,
+    "title": "Temel Semboller: . , ; :",
+    "description": "Programlamada çok kullanılan semboller.",
+    "targetKeys": [".","," ,";",":"],
+    "content": "a.b c,d e;f g:h a.b.c d,e,f g;h;i j:k:l a,b;c.d",
+    "minAccuracy": 82
+  },
+  {
+    "id": 34, "moduleId": 4, "isExam": false,
+    "title": "Parantezler: ( )",
+    "description": "Fonksiyon parantezlerini öğreniyoruz.",
+    "targetKeys": ["(", ")"],
+    "content": "setup() loop() delay(1000) pinMode(13) digitalWrite(13)",
+    "minAccuracy": 85
+  },
+  {
+    "id": 35, "moduleId": 4, "isExam": false,
+    "title": "Süslü Parantez: { }",
+    "description": "Kod bloklarını öğreniyoruz.",
+    "targetKeys": ["{", "}"],
+    "content": "void setup() { } void loop() { } if (true) { } else { }",
+    "minAccuracy": 85
+  },
+  {
+    "id": 36, "moduleId": 4, "isExam": true,
+    "title": "Mini Sınav 4",
+    "description": "Modül 4 sınavı. %90 doğruluk gerekli!",
+    "targetKeys": ["0","1","2","3","4","5","6","7","8","9","(",")",".",";"],
+    "content": "delay(1000) pinMode(13) digitalWrite(13, HIGH) delay(500) setup() loop()",
+    "minAccuracy": 90,
+    "minWPM": 16
+  },
+  {
+    "id": 37, "moduleId": 5, "isExam": false,
+    "title": "Değişken Tanımlama",
+    "description": "int led = 13; gibi değişkenler tanımlıyoruz.",
+    "targetKeys": ["i","n","t","l","e","d","=","1","3",";"],
+    "content": "int led = 13; int pin = 9; int val = 0; int speed = 100;",
+    "minAccuracy": 85
+  },
+  {
+    "id": 38, "moduleId": 5, "isExam": false,
+    "title": "pinMode Komutları",
+    "description": "pinMode(led, OUTPUT); komutunu yazıyoruz.",
+    "targetKeys": ["p","i","n","M","o","d","e","O","U","T","P"],
+    "content": "pinMode(led, OUTPUT); pinMode(btn, INPUT); pinMode(13, OUTPUT);",
+    "minAccuracy": 85
+  },
+  {
+    "id": 39, "moduleId": 5, "isExam": false,
+    "title": "digitalWrite Komutları",
+    "description": "digitalWrite(led, HIGH); komutunu yazıyoruz.",
+    "targetKeys": ["d","i","g","t","a","l","W","r","e","H","I","G","L","O","W"],
+    "content": "digitalWrite(led, HIGH); digitalWrite(led, LOW); digitalWrite(13, HIGH);",
+    "minAccuracy": 85
+  },
+  {
+    "id": 40, "moduleId": 5, "isExam": false,
+    "title": "delay Komutları",
+    "description": "delay(1000); komutunu yazıyoruz.",
+    "targetKeys": ["d","e","l","a","y","(","1","0","0","0",")",";"],
+    "content": "delay(1000); delay(500); delay(200); delay(2000); delay(100);",
+    "minAccuracy": 85
+  },
+  {
+    "id": 41, "moduleId": 5, "isExam": false,
+    "title": "if Yapısı",
+    "description": "if (sensor > 100) { } yapısını yazıyoruz.",
+    "targetKeys": ["i","f","(","s","e","n","o","r",">","1","0",")","{","}"],
+    "content": "if (val > 100) { } if (btn == HIGH) { } if (speed < 50) { }",
+    "minAccuracy": 87
+  },
+  {
+    "id": 42, "moduleId": 5, "isExam": false,
+    "title": "for Döngüsü",
+    "description": "for (int i=0; i<10; i++) { } yapısını yazıyoruz.",
+    "targetKeys": ["f","o","r","(","i","n","t","=","0","<","1",";","+",")","{","}"],
+    "content": "for (int i=0; i<10; i++) { } for (int j=0; j<5; j++) { }",
+    "minAccuracy": 87
+  },
+  {
+    "id": 43, "moduleId": 5, "isExam": false,
+    "title": "while Döngüsü",
+    "description": "while (true) { } yapısını yazıyoruz.",
+    "targetKeys": ["w","h","i","l","e","(","t","r","u",")","{","}"],
+    "content": "while (true) { } while (btn == HIGH) { } while (val < 100) { }",
+    "minAccuracy": 87
+  },
+  {
+    "id": 44, "moduleId": 5, "isExam": false,
+    "title": "Tam setup Fonksiyonu",
+    "description": "Tam setup fonksiyonunu yazıyoruz.",
+    "targetKeys": ["v","o","i","d","s","e","t","u","p","(",")","{","}"],
+    "content": "void setup() { pinMode(led, OUTPUT); Serial.begin(9600); }",
+    "minAccuracy": 87
+  },
+  {
+    "id": 45, "moduleId": 5, "isExam": false,
+    "title": "Tam loop Fonksiyonu",
+    "description": "Tam loop fonksiyonunu yazıyoruz.",
+    "targetKeys": ["v","o","i","d","l","p","(",")","{","}"],
+    "content": "void loop() { digitalWrite(led, HIGH); delay(1000); digitalWrite(led, LOW); }",
+    "minAccuracy": 87
+  },
+  {
+    "id": 46, "moduleId": 5, "isExam": true,
+    "title": "Mini Sınav 5",
+    "description": "Modül 5 sınavı. %90 doğruluk gerekli!",
+    "targetKeys": [],
+    "content": "int led = 13; void setup() { pinMode(led, OUTPUT); } void loop() { digitalWrite(led, HIGH); delay(1000); digitalWrite(led, LOW); delay(1000); }",
+    "minAccuracy": 90,
+    "minWPM": 18
+  },
+  {
+    "id": 47, "moduleId": 0, "isExam": true,
+    "title": "Final Sınavı",
+    "description": "Tüm modüllerden karma Arduino kodları. %95 doğruluk, 20 WPM gerekli!",
+    "targetKeys": [],
+    "content": "int led = 13; int btn = 2; void setup() { pinMode(led, OUTPUT); pinMode(btn, INPUT); Serial.begin(9600); } void loop() { if (digitalRead(btn) == HIGH) { digitalWrite(led, HIGH); delay(500); } else { digitalWrite(led, LOW); } }",
+    "minAccuracy": 95,
+    "minWPM": 20
+  }
+]

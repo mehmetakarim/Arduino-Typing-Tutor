@@ -1,0 +1,67 @@
+{
+  "rows": [
+    {
+      "keys": [
+        { "key": "`", "shiftKey": "~", "code": "Backquote", "finger": "leftPinky" },
+        { "key": "1", "shiftKey": "!", "code": "Digit1", "finger": "leftPinky" },
+        { "key": "2", "shiftKey": "'", "code": "Digit2", "finger": "leftRing" },
+        { "key": "3", "shiftKey": "^", "code": "Digit3", "finger": "leftMiddle" },
+        { "key": "4", "shiftKey": "+", "altKey": "$", "code": "Digit4", "finger": "leftIndex" },
+        { "key": "5", "shiftKey": "%", "code": "Digit5", "finger": "leftIndex" },
+        { "key": "6", "shiftKey": "&", "code": "Digit6", "finger": "rightIndex" },
+        { "key": "7", "shiftKey": "/", "altKey": "{", "code": "Digit7", "finger": "rightIndex" },
+        { "key": "8", "shiftKey": "(", "altKey": "[", "code": "Digit8", "finger": "rightMiddle" },
+        { "key": "9", "shiftKey": ")", "altKey": "]", "code": "Digit9", "finger": "rightRing" },
+        { "key": "0", "shiftKey": "=", "altKey": "}", "code": "Digit0", "finger": "rightPinky" },
+        { "key": "*", "shiftKey": "?", "code": "Minus", "finger": "rightPinky" },
+        { "key": "-", "shiftKey": "_", "code": "Equal", "finger": "rightPinky" }
+      ]
+    },
+    {
+      "keys": [
+        { "key": "q", "shiftKey": "Q", "code": "KeyQ", "finger": "leftPinky" },
+        { "key": "w", "shiftKey": "W", "code": "KeyW", "finger": "leftRing" },
+        { "key": "e", "shiftKey": "E", "code": "KeyE", "finger": "leftMiddle" },
+        { "key": "r", "shiftKey": "R", "code": "KeyR", "finger": "leftIndex" },
+        { "key": "t", "shiftKey": "T", "code": "KeyT", "finger": "leftIndex" },
+        { "key": "y", "shiftKey": "Y", "code": "KeyY", "finger": "rightIndex" },
+        { "key": "u", "shiftKey": "U", "code": "KeyU", "finger": "rightIndex" },
+        { "key": "i", "shiftKey": "İ", "code": "KeyI", "finger": "rightMiddle" },
+        { "key": "o", "shiftKey": "O", "code": "KeyO", "finger": "rightRing" },
+        { "key": "p", "shiftKey": "P", "code": "KeyP", "finger": "rightPinky" },
+        { "key": "ğ", "shiftKey": "Ğ", "code": "BracketLeft", "finger": "rightPinky" },
+        { "key": "ü", "shiftKey": "Ü", "code": "BracketRight", "finger": "rightPinky" }
+      ]
+    },
+    {
+      "keys": [
+        { "key": "a", "shiftKey": "A", "code": "KeyA", "finger": "leftPinky" },
+        { "key": "s", "shiftKey": "S", "code": "KeyS", "finger": "leftRing" },
+        { "key": "d", "shiftKey": "D", "code": "KeyD", "finger": "leftMiddle" },
+        { "key": "f", "shiftKey": "F", "code": "KeyF", "finger": "leftIndex" },
+        { "key": "g", "shiftKey": "G", "code": "KeyG", "finger": "leftIndex" },
+        { "key": "h", "shiftKey": "H", "code": "KeyH", "finger": "rightIndex" },
+        { "key": "j", "shiftKey": "J", "code": "KeyJ", "finger": "rightIndex" },
+        { "key": "k", "shiftKey": "K", "code": "KeyK", "finger": "rightMiddle" },
+        { "key": "l", "shiftKey": "L", "code": "KeyL", "finger": "rightRing" },
+        { "key": "ş", "shiftKey": "Ş", "code": "Semicolon", "finger": "rightPinky" },
+        { "key": "i", "shiftKey": "İ", "code": "Quote", "finger": "rightPinky" }
+      ]
+    },
+    {
+      "keys": [
+        { "key": "z", "shiftKey": "Z", "code": "KeyZ", "finger": "leftPinky" },
+        { "key": "x", "shiftKey": "X", "code": "KeyX", "finger": "leftRing" },
+        { "key": "c", "shiftKey": "C", "code": "KeyC", "finger": "leftMiddle" },
+        { "key": "v", "shiftKey": "V", "code": "KeyV", "finger": "leftIndex" },
+        { "key": "b", "shiftKey": "B", "code": "KeyB", "finger": "leftIndex" },
+        { "key": "n", "shiftKey": "N", "code": "KeyN", "finger": "rightIndex" },
+        { "key": "m", "shiftKey": "M", "code": "KeyM", "finger": "rightIndex" },
+        { "key": "ö", "shiftKey": "Ö", "code": "Comma", "finger": "rightMiddle" },
+        { "key": "ç", "shiftKey": "Ç", "code": "Period", "finger": "rightRing" },
+        { "key": ".", "shiftKey": ":", "code": "Slash", "finger": "rightPinky" },
+        { "key": ",", "shiftKey": ";", "code": "IntlRo", "finger": "rightPinky" }
+      ]
+    }
+  ]
+}
