@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: '--target aarch64-apple-darwin'
+          - platform: windows-latest
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Rust kur
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+
+      - name: Rust önbelleği
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: npm bağımlılıkları yükle
+        run: npm install
+
+      - name: Tauri build
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Arduino Typing Tutor ${{ github.ref_name }}'
+          releaseBody: |
+            ## Kurulum
+
+            **macOS:** `.dmg` dosyasını indirin, uygulamayı Applications klasörüne sürükleyin.
+            İlk açılışta: Sağ tık → Aç (imzasız uygulama uyarısını geçmek için)
+
+            **Windows:** `.msi` dosyasını indirip çalıştırın.
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
