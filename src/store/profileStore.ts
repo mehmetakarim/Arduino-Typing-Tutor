@@ -1,0 +1,87 @@
+import { create } from 'zustand';
+import { Profile, ParentSettings } from '../types';
+import {
+  getCachedProfiles,
+  setCachedProfiles,
+  getCachedParentSettings,
+  saveProfilesToFS,
+  saveProfileProgressToFS,
+  saveParentSettingsToFS,
+  loadProfileProgressFromFS,
+  defaultProgress,
+} from '../utils/storage';
+import { setCachedProgress } from '../utils/storage';
+import { setActiveProfileId } from './progressStore';
+
+// Profil renk seçenekleri
+export const PROFILE_COLORS = [
+  '#6366F1', // indigo
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#EF4444', // red
+  '#F97316', // orange
+  '#EAB308', // yellow
+  '#22C55E', // green
+  '#06B6D4', // cyan
+];
+
+interface ProfileState {
+  profiles: Profile[];
+  activeProfile: Profile | null;
+  parentSettings: ParentSettings;
+
+  setActiveProfile: (profile: Profile) => Promise<void>;
+  addProfile: (name: string, color: string) => Promise<Profile>;
+  deleteProfile: (id: string) => Promise<void>;
+  updateParentSettings: (settings: ParentSettings) => void;
+  verifyPin: (pin: string) => boolean;
+}
+
+export const useProfileStore = create<ProfileState>((set, get) => ({
+  profiles: getCachedProfiles(),
+  activeProfile: null,
+  parentSettings: getCachedParentSettings(),
+
+  setActiveProfile: async (profile) => {
+    const progress = await loadProfileProgressFromFS(profile.id);
+    setCachedProgress(progress);
+    setActiveProfileId(profile.id);
+    set({ activeProfile: profile });
+  },
+
+  addProfile: async (name, color) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const profile: Profile = {
+      id,
+      name: name.trim(),
+      color,
+      createdAt: new Date().toISOString(),
+    };
+    // Yeni profil için boş progress dosyası oluştur
+    await saveProfileProgressToFS(id, { ...defaultProgress });
+
+    const updated = [...get().profiles, profile];
+    setCachedProfiles(updated);
+    saveProfilesToFS(updated); // fire-and-forget
+    set({ profiles: updated });
+    return profile;
+  },
+
+  deleteProfile: async (id) => {
+    const updated = get().profiles.filter(p => p.id !== id);
+    setCachedProfiles(updated);
+    saveProfilesToFS(updated); // fire-and-forget
+    set({ profiles: updated, activeProfile: get().activeProfile?.id === id ? null : get().activeProfile });
+  },
+
+  updateParentSettings: (settings) => {
+    saveParentSettingsToFS(settings); // fire-and-forget
+    set({ parentSettings: settings });
+  },
+
+  verifyPin: (pin) => {
+    const { parentSettings } = get();
+    if (!parentSettings.pinEnabled || !parentSettings.pin) return true;
+    return parentSettings.pin === pin;
+  },
+}));

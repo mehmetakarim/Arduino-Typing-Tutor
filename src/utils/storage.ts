@@ -1,6 +1,6 @@
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { readTextFile, writeTextFile, mkdir, exists } from '@tauri-apps/plugin-fs';
-import { UserProgress } from '../types';
+import { UserProgress, Profile, ParentSettings } from '../types';
 
 // ── Tipler ──────────────────────────────────────────────────────────────────
 
@@ -134,5 +134,94 @@ export async function saveSettingsToFS(settings: Settings): Promise<void> {
     await writeTextFile(filePath, JSON.stringify(settings));
   } catch (e) {
     console.error('settings kaydetme hatası:', e);
+  }
+}
+
+// ── Profiller ─────────────────────────────────────────────────────────────────
+
+export const defaultParentSettings: ParentSettings = {
+  pin: null,
+  pinEnabled: false,
+};
+
+let _cachedProfiles: Profile[] = [];
+let _cachedParentSettings: ParentSettings = { ...defaultParentSettings };
+
+export function getCachedProfiles(): Profile[] { return _cachedProfiles; }
+export function setCachedProfiles(p: Profile[]) { _cachedProfiles = p; }
+export function getCachedParentSettings(): ParentSettings { return _cachedParentSettings; }
+export function setCachedParentSettings(p: ParentSettings) { _cachedParentSettings = p; }
+
+export async function loadProfilesFromFS(): Promise<Profile[]> {
+  try {
+    const dir = await appDataDir();
+    const filePath = await join(dir, 'profiles.json');
+    if (await exists(filePath)) {
+      return JSON.parse(await readTextFile(filePath));
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveProfilesToFS(profiles: Profile[]): Promise<void> {
+  try {
+    const dir = await appDataDir();
+    await ensureAppDir(dir);
+    const filePath = await join(dir, 'profiles.json');
+    await writeTextFile(filePath, JSON.stringify(profiles));
+  } catch (e) {
+    console.error('profiles kaydetme hatası:', e);
+  }
+}
+
+export async function loadProfileProgressFromFS(profileId: string): Promise<UserProgress> {
+  try {
+    const dir = await appDataDir();
+    const profileDir = await join(dir, 'profiles', profileId);
+    const filePath = await join(profileDir, 'progress.json');
+    if (await exists(filePath)) {
+      return { ...defaultProgress, ...JSON.parse(await readTextFile(filePath)) };
+    }
+    return { ...defaultProgress };
+  } catch {
+    return { ...defaultProgress };
+  }
+}
+
+export async function saveProfileProgressToFS(profileId: string, progress: UserProgress): Promise<void> {
+  try {
+    const dir = await appDataDir();
+    const profileDir = await join(dir, 'profiles', profileId);
+    await ensureAppDir(profileDir);
+    const filePath = await join(profileDir, 'progress.json');
+    await writeTextFile(filePath, JSON.stringify(progress));
+  } catch (e) {
+    console.error('profil progress kaydetme hatası:', e);
+  }
+}
+
+export async function loadParentSettingsFromFS(): Promise<ParentSettings> {
+  try {
+    const dir = await appDataDir();
+    const filePath = await join(dir, 'parent.json');
+    if (await exists(filePath)) {
+      return { ...defaultParentSettings, ...JSON.parse(await readTextFile(filePath)) };
+    }
+    return { ...defaultParentSettings };
+  } catch {
+    return { ...defaultParentSettings };
+  }
+}
+
+export async function saveParentSettingsToFS(settings: ParentSettings): Promise<void> {
+  try {
+    const dir = await appDataDir();
+    await ensureAppDir(dir);
+    const filePath = await join(dir, 'parent.json');
+    await writeTextFile(filePath, JSON.stringify(settings));
+  } catch (e) {
+    console.error('parent settings kaydetme hatası:', e);
   }
 }

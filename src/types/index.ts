@@ -68,12 +68,26 @@ export interface UserProgress {
 }
 
 export type AppScreen =
+  | 'profile-select'
   | 'menu'
   | 'lesson'
   | 'exam'
   | 'result'
   | 'finalExam'
-  | 'certificate';
+  | 'certificate'
+  | 'parent-panel';
+
+export interface Profile {
+  id: string;
+  name: string;
+  color: string; // tailwind bg rengi, örn. '#6366F1'
+  createdAt: string;
+}
+
+export interface ParentSettings {
+  pin: string | null; // null = PIN yok
+  pinEnabled: boolean;
+}
 
 export interface TypingResult {
   lessonId: number;

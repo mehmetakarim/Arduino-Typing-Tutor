@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useProgressStore } from '../store/progressStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useProfileStore } from '../store/profileStore';
 import { StatsChart } from './StatsChart';
 import { SettingsModal } from './SettingsModal';
 import lessonsData from '../data/lessons.json';
@@ -41,6 +42,7 @@ function formatTime(s: number): string {
 export function MainMenu() {
   const { progress, startLesson, setScreen, reset } = useProgressStore();
   const { theme } = useSettingsStore();
+  const { activeProfile } = useProfileStore();
   const isLight = theme === 'light';
   const [showReset, setShowReset] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -100,6 +102,14 @@ export function MainMenu() {
               </div>
             </div>
             <button
+              onClick={() => setScreen('parent-panel')}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-colors"
+              style={{ backgroundColor: `${levelInfo.accent}18`, border: `1px solid ${levelInfo.accent}40` }}
+              title="Ebeveyn Paneli"
+            >
+              👨‍👩‍👧
+            </button>
+            <button
               onClick={() => setShowSettings(true)}
               className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-colors"
               style={{ backgroundColor: `${levelInfo.accent}18`, border: `1px solid ${levelInfo.accent}40` }}
@@ -107,6 +117,16 @@ export function MainMenu() {
             >
               ⚙️
             </button>
+            {activeProfile && (
+              <button
+                onClick={() => setScreen('profile-select')}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all hover:scale-110"
+                style={{ backgroundColor: activeProfile.color }}
+                title={`${activeProfile.name} — Profil değiştir`}
+              >
+                {activeProfile.name.charAt(0).toUpperCase()}
+              </button>
+            )}
           </div>
         </div>
 

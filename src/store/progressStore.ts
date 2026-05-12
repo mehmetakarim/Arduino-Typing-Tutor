@@ -4,6 +4,7 @@ import {
   getCachedProgress,
   setCachedProgress,
   saveProgressToFS,
+  saveProfileProgressToFS,
   resetProgressFS,
   defaultProgress,
 } from '../utils/storage';
@@ -24,9 +25,17 @@ function checkNewBadges(progress: UserProgress): string[] {
     .map(b => b.id);
 }
 
+// Aktif profil ID'sini dışarıdan set etmek için — circular import'tan kaçınır
+let _activeProfileId: string | null = null;
+export function setActiveProfileId(id: string | null) { _activeProfileId = id; }
+
 function save(progress: UserProgress) {
   setCachedProgress(progress);
-  saveProgressToFS(progress); // fire-and-forget
+  if (_activeProfileId) {
+    saveProfileProgressToFS(_activeProfileId, progress); // fire-and-forget
+  } else {
+    saveProgressToFS(progress); // fire-and-forget
+  }
 }
 
 interface ProgressState {
@@ -152,7 +161,12 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   },
 
   reset: () => {
-    resetProgressFS(); // fire-and-forget, cache'i de sıfırlar
+    if (_activeProfileId) {
+      saveProfileProgressToFS(_activeProfileId, { ...defaultProgress });
+      setCachedProgress({ ...defaultProgress });
+    } else {
+      resetProgressFS(); // global dosyayı sıfırla
+    }
     set({ progress: { ...defaultProgress }, screen: 'menu', activeLessonId: null, lastResult: null });
   },
 }));
