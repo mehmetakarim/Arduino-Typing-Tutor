@@ -80,7 +80,8 @@ export type AppScreen =
 export interface Profile {
   id: string;
   name: string;
-  color: string; // tailwind bg rengi, örn. '#6366F1'
+  color: string;
+  emoji?: string; // isteğe bağlı avatar emoji
   createdAt: string;
 }
 

@@ -6,9 +6,12 @@ import { Profile } from '../types';
 export function ProfileSelect() {
   const { profiles, setActiveProfile, addProfile, deleteProfile } = useProfileStore();
   const { setScreen } = useProgressStore();
+  const AVATARS = ['😀','🐱','🚀','🤖','⚡','🎮','🦊','🐧','🌟','🎯','🔥','🎸'];
+
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [selectedColor, setSelectedColor] = useState(PROFILE_COLORS[0]);
+  const [selectedEmoji, setSelectedEmoji] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -21,7 +24,7 @@ export function ProfileSelect() {
   async function handleAdd() {
     if (!newName.trim()) return;
     setLoading(true);
-    const profile = await addProfile(newName, selectedColor);
+    const profile = await addProfile(newName, selectedColor, selectedEmoji);
     await setActiveProfile(profile);
     setScreen('menu');
   }
@@ -55,7 +58,7 @@ export function ProfileSelect() {
                 className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
                 style={{ backgroundColor: profile.color }}
               >
-                {profile.name.charAt(0).toUpperCase()}
+                {profile.emoji ? profile.emoji : profile.name.charAt(0).toUpperCase()}
               </div>
               <span className="text-white font-medium text-sm">{profile.name}</span>
             </button>
@@ -117,6 +120,26 @@ export function ProfileSelect() {
             autoFocus
             className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 mb-4"
           />
+
+          {/* Emoji seçici */}
+          <div className="mb-3">
+            <p className="text-gray-500 text-xs mb-2">Avatar emoji (isteğe bağlı)</p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSelectedEmoji('')}
+                className="w-8 h-8 rounded-lg text-xs flex items-center justify-center transition-all"
+                style={{ backgroundColor: selectedEmoji === '' ? selectedColor : '#242425', color: selectedEmoji === '' ? 'white' : '#9CA3AF' }}
+              >A</button>
+              {AVATARS.map(e => (
+                <button
+                  key={e}
+                  onClick={() => setSelectedEmoji(e)}
+                  className="w-8 h-8 rounded-lg text-lg flex items-center justify-center transition-all hover:scale-110"
+                  style={{ backgroundColor: selectedEmoji === e ? selectedColor + '44' : '#242425', outline: selectedEmoji === e ? `2px solid ${selectedColor}` : 'none' }}
+                >{e}</button>
+              ))}
+            </div>
+          </div>
 
           {/* Renk seçici */}
           <div className="flex gap-2 mb-5 flex-wrap">
