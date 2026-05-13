@@ -16,6 +16,9 @@ const ALL_BADGES = [
   { id: 'perfect',       check: (p: UserProgress) => p.lessonStats.some(s => s.bestAccuracy === 100) },
   { id: 'module1_done',  check: (p: UserProgress) => p.examsPassed.includes(11) },
   { id: 'module5_done',  check: (p: UserProgress) => p.examsPassed.includes(46) },
+  { id: 'module6_done',  check: (p: UserProgress) => p.examsPassed.includes(56) },
+  { id: 'module7_done',  check: (p: UserProgress) => p.examsPassed.includes(65) },
+  { id: 'module8_done',  check: (p: UserProgress) => p.examsPassed.includes(74) },
   { id: 'final_champ',   check: (p: UserProgress) => p.finalExamPassed },
 ];
 

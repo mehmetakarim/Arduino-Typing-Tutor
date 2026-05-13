@@ -3,7 +3,18 @@
     "id": 1,
     "title": "Ev Sırası Tuşları",
     "description": "A, S, D, F, J, K, L, Ş tuşlarını öğren",
-    "lessonIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "lessonIds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
     "examId": 11,
     "unlockCondition": []
   },
@@ -11,32 +22,153 @@
     "id": 2,
     "title": "Üst Sıra",
     "description": "Q, W, E, R, T, Y, U, I, O, P, Ğ, Ü tuşlarını öğren",
-    "lessonIds": [12, 13, 14, 15, 16, 17, 18, 19],
+    "lessonIds": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
     "examId": 20,
-    "unlockCondition": [1]
+    "unlockCondition": [
+      1
+    ]
   },
   {
     "id": 3,
     "title": "Alt Sıra",
     "description": "Z, X, C, V, B, N, M, Ö, Ç tuşlarını öğren",
-    "lessonIds": [21, 22, 23, 24, 25, 26, 27, 28],
+    "lessonIds": [
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28
+    ],
     "examId": 29,
-    "unlockCondition": [1, 2]
+    "unlockCondition": [
+      1,
+      2
+    ]
   },
   {
     "id": 4,
     "title": "Sayılar ve Semboller",
     "description": "0-9 sayıları ve programlama sembolleri",
-    "lessonIds": [30, 31, 32, 33, 34, 35],
+    "lessonIds": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35
+    ],
     "examId": 36,
-    "unlockCondition": [1, 2, 3]
+    "unlockCondition": [
+      1,
+      2,
+      3
+    ]
   },
   {
     "id": 5,
     "title": "Arduino Kodları",
     "description": "Gerçek Arduino kod blokları yaz",
-    "lessonIds": [37, 38, 39, 40, 41, 42, 43, 44, 45],
+    "lessonIds": [
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
     "examId": 46,
-    "unlockCondition": [1, 2, 3, 4]
+    "unlockCondition": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Fonksiyonlar ve Parametreler",
+    "description": "Kendi fonksiyonlarını yaz, parametre ve return kullan",
+    "lessonIds": [
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55
+    ],
+    "examId": 56,
+    "unlockCondition": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Sensörler ve Kütüphaneler",
+    "description": "#include, Serial, analogRead ve map() kullan",
+    "lessonIds": [
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+    ],
+    "examId": 65,
+    "unlockCondition": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Gerçek Arduino Projeleri",
+    "description": "Tam proje iskeletleri yaz: LED, buton, PWM, sensör",
+    "lessonIds": [
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73
+    ],
+    "examId": 74,
+    "unlockCondition": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
   }
 ]
