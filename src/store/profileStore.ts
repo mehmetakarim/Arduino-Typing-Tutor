@@ -31,7 +31,7 @@ interface ProfileState {
   parentSettings: ParentSettings;
 
   setActiveProfile: (profile: Profile) => Promise<void>;
-  addProfile: (name: string, color: string) => Promise<Profile>;
+  addProfile: (name: string, color: string, emoji?: string) => Promise<Profile>;
   deleteProfile: (id: string) => Promise<void>;
   updateParentSettings: (settings: ParentSettings) => void;
   verifyPin: (pin: string) => boolean;
@@ -49,12 +49,13 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     set({ activeProfile: profile });
   },
 
-  addProfile: async (name, color) => {
+  addProfile: async (name, color, emoji) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const profile: Profile = {
       id,
       name: name.trim(),
       color,
+      ...(emoji ? { emoji } : {}),
       createdAt: new Date().toISOString(),
     };
     // Yeni profil için boş progress dosyası oluştur

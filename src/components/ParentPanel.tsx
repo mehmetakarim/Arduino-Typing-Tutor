@@ -3,6 +3,10 @@ import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
 import { loadProfileProgressFromFS } from '../utils/storage';
 import { UserProgress } from '../types';
+import {
+  RadarChart, Radar, PolarGrid, PolarAngleAxis,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts';
 
 type View = 'pin' | 'dashboard' | 'settings';
 
@@ -140,6 +144,63 @@ export function ParentPanel() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Karşılaştırma grafikleri */}
+        {statsLoaded && profiles.length > 1 && (
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* WPM Karşılaştırma */}
+            <div className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
+              <p className="text-gray-400 text-sm font-medium mb-4">Ortalama WPM Karşılaştırması</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={profiles.map(p => ({
+                  name: p.name,
+                  wpm: profileStats[p.id]?.lessonStats.length
+                    ? Math.round(profileStats[p.id].lessonStats.reduce((s, l) => s + l.bestWPM, 0) / profileStats[p.id].lessonStats.length)
+                    : 0,
+                  color: p.color,
+                }))} barSize={32}>
+                  <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#242425', border: '1px solid #2E2E2F', borderRadius: 10, color: '#F2F2F2' }}
+                    formatter={(v) => [`${v} WPM`, 'Hız']}
+                  />
+                  <Bar dataKey="wpm" radius={[6, 6, 0, 0]}>
+                    {profiles.map((p) => <Cell key={p.id} fill={p.color} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Radar — çok profil yetenek karşılaştırması */}
+            <div className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
+              <p className="text-gray-400 text-sm font-medium mb-4">Yetenek Profili</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <RadarChart data={[
+                  { subject: 'Hız',      ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.lessonStats.reduce((s,l)=>s+l.bestWPM,0)||0) / Math.max(1, profileStats[p.id]?.lessonStats.length||1))])) },
+                  { subject: 'Doğruluk', ...Object.fromEntries(profiles.map(p => [p.name, Math.round((profileStats[p.id]?.lessonStats.reduce((s,l)=>s+l.bestAccuracy,0)||0) / Math.max(1, profileStats[p.id]?.lessonStats.length||1))])) },
+                  { subject: 'Dersler',  ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.completedLessons.length||0) * 1.5)])) },
+                  { subject: 'Seri',     ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.longestStreak||0) * 10)])) },
+                  { subject: 'Rozetler', ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.badges.length||0) * 12)])) },
+                ]}>
+                  <PolarGrid stroke="#2E2E2F" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
+                  {profiles.map(p => (
+                    <Radar key={p.id} name={p.name} dataKey={p.name} stroke={p.color} fill={p.color} fillOpacity={0.15} />
+                  ))}
+                </RadarChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-3 mt-2 justify-center">
+                {profiles.map(p => (
+                  <span key={p.id} className="flex items-center gap-1.5 text-xs text-gray-400">
+                    <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: p.color }} />
+                    {p.name}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
