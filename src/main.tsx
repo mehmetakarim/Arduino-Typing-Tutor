@@ -12,6 +12,8 @@ import {
   setCachedProfiles,
   setCachedParentSettings,
 } from "./utils/storage";
+import { useProfileStore } from "./store/profileStore";
+import { useSettingsStore } from "./store/settingsStore";
 
 async function init() {
   const [progress, settings, profiles, parentSettings] = await Promise.all([
@@ -21,10 +23,20 @@ async function init() {
     loadParentSettingsFromFS(),
   ]);
 
+  // Cache'i güncelle
   setCachedProgress(progress);
   setCachedSettings(settings);
   setCachedProfiles(profiles);
   setCachedParentSettings(parentSettings);
+
+  // Store'ları da güncelle — modüller React render öncesi oluşturulduğundan
+  // cache o an boştu; şimdi doğrudan inject ediyoruz
+  useProfileStore.setState({ profiles, parentSettings });
+  useSettingsStore.setState({
+    soundEnabled: settings.soundEnabled,
+    theme: settings.theme,
+    difficulty: settings.difficulty,
+  });
 
   // Temayı render öncesi uygula (FOUC önlemek için)
   if (settings.theme === 'light') {

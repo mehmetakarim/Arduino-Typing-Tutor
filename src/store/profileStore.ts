@@ -11,7 +11,7 @@ import {
   defaultProgress,
 } from '../utils/storage';
 import { setCachedProgress } from '../utils/storage';
-import { setActiveProfileId } from './progressStore';
+import { setActiveProfileId, useProgressStore } from './progressStore';
 
 // Profil renk seçenekleri
 export const PROFILE_COLORS = [
@@ -46,6 +46,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const progress = await loadProfileProgressFromFS(profile.id);
     setCachedProgress(progress);
     setActiveProfileId(profile.id);
+    // progressStore state'ini de güncelle — sadece cache değil store da yenilenmeli
+    useProgressStore.setState({ progress, screen: 'menu', activeLessonId: null, lastResult: null });
     set({ activeProfile: profile });
   },
 
