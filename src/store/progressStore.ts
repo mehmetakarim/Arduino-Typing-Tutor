@@ -39,6 +39,7 @@ function save(progress: UserProgress) {
   if (_activeProfileId) {
     saveProfileProgressToFS(_activeProfileId, progress); // fire-and-forget
     const user = useAuthStore.getState().user;
+    console.log('[save] profileId:', _activeProfileId, '| userId:', user?.id ?? 'null — sync atlandı');
     if (user) syncProgressToSupabase(user.id, _activeProfileId, progress); // fire-and-forget
   } else {
     saveProgressToFS(progress); // fire-and-forget
