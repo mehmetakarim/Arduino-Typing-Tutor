@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
+import { useAuthStore } from '../store/authStore';
 import { loadProfileProgressFromFS } from '../utils/storage';
+import { supabase } from '../lib/supabase';
 import { UserProgress } from '../types';
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
@@ -13,6 +15,7 @@ type View = 'pin' | 'dashboard' | 'settings';
 export function ParentPanel() {
   const { profiles, parentSettings, updateParentSettings, verifyPin } = useProfileStore();
   const { setScreen } = useProgressStore();
+  const { user } = useAuthStore();
   const [view, setView] = useState<View>(parentSettings.pinEnabled ? 'pin' : 'dashboard');
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -20,6 +23,44 @@ export function ParentPanel() {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinEnabled, setPinEnabled] = useState(parentSettings.pinEnabled);
+
+  // Sınıfa katılma
+  const [classCode, setClassCode] = useState('');
+  const [selectedProfileId, setSelectedProfileId] = useState(profiles[0]?.id ?? '');
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinMsg, setJoinMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  async function handleJoinClass() {
+    if (!classCode.trim() || !selectedProfileId || !user) return;
+    setJoinLoading(true);
+    setJoinMsg(null);
+
+    const { data: cls } = await supabase
+      .from('classes')
+      .select('id, name')
+      .eq('code', classCode.trim().toUpperCase())
+      .single();
+
+    if (!cls) {
+      setJoinMsg({ type: 'err', text: 'Sınıf kodu bulunamadı.' });
+      setJoinLoading(false);
+      return;
+    }
+
+    const profile = profiles.find(p => p.id === selectedProfileId);
+    const { error } = await supabase.from('class_members').upsert(
+      { class_id: cls.id, profile_id: selectedProfileId, owner_id: user.id, student_name: profile?.name ?? 'Öğrenci' },
+      { onConflict: 'class_id,profile_id' },
+    );
+
+    setJoinLoading(false);
+    if (error) {
+      setJoinMsg({ type: 'err', text: 'Katılım başarısız, tekrar dene.' });
+    } else {
+      setJoinMsg({ type: 'ok', text: `"${cls.name}" sınıfına katıldı!` });
+      setClassCode('');
+    }
+  }
 
   // PIN yoksa dashboard açılır, istatistikleri hemen yükle
   useEffect(() => {
@@ -201,6 +242,44 @@ export function ParentPanel() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Sınıfa Katıl — sadece giriş yapılmışsa */}
+        {user && statsLoaded && (
+          <div className="mt-6 rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
+            <h3 className="text-white font-semibold mb-4">📚 Öğretmen Sınıfına Katıl</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <select
+                value={selectedProfileId}
+                onChange={e => setSelectedProfileId(e.target.value)}
+                className="bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-indigo-500"
+              >
+                {profiles.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Sınıf kodu (ör. ATT-5A)"
+                value={classCode}
+                onChange={e => { setClassCode(e.target.value); setJoinMsg(null); }}
+                onKeyDown={e => e.key === 'Enter' && handleJoinClass()}
+                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 text-sm outline-none focus:border-indigo-500"
+              />
+              <button
+                onClick={handleJoinClass}
+                disabled={!classCode.trim() || joinLoading}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-40 transition-colors whitespace-nowrap"
+              >
+                {joinLoading ? 'Katılıyor...' : 'Katıl'}
+              </button>
+            </div>
+            {joinMsg && (
+              <p className={`mt-3 text-xs px-3 py-2 rounded-lg ${joinMsg.type === 'ok' ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                {joinMsg.text}
+              </p>
+            )}
           </div>
         )}
 

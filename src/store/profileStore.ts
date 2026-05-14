@@ -10,8 +10,9 @@ import {
   loadProfileProgressFromFS,
   defaultProgress,
 } from '../utils/storage';
-import { setCachedProgress } from '../utils/storage';
+import { setCachedProgress, fetchProgressFromSupabase } from '../utils/storage';
 import { setActiveProfileId, useProgressStore } from './progressStore';
+import { useAuthStore } from './authStore';
 
 // Profil renk seçenekleri
 export const PROFILE_COLORS = [
@@ -43,10 +44,18 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   parentSettings: getCachedParentSettings(),
 
   setActiveProfile: async (profile) => {
-    const progress = await loadProfileProgressFromFS(profile.id);
+    // Önce FS'ten yükle (hızlı, offline çalışır)
+    let progress = await loadProfileProgressFromFS(profile.id);
+
+    // Giriş yapılmışsa Supabase'den dene — daha güncel olabilir
+    const user = useAuthStore.getState().user;
+    if (user) {
+      const cloud = await fetchProgressFromSupabase(user.id, profile.id);
+      if (cloud) progress = cloud;
+    }
+
     setCachedProgress(progress);
     setActiveProfileId(profile.id);
-    // progressStore state'ini de güncelle — sadece cache değil store da yenilenmeli
     useProgressStore.setState({ progress, screen: 'menu', activeLessonId: null, lastResult: null });
     set({ activeProfile: profile });
   },

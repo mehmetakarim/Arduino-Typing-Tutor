@@ -1,6 +1,7 @@
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { readTextFile, writeTextFile, mkdir, exists } from '@tauri-apps/plugin-fs';
 import { UserProgress, Profile, ParentSettings } from '../types';
+import { supabase } from '../lib/supabase';
 
 // ── Tipler ──────────────────────────────────────────────────────────────────
 
@@ -223,5 +224,40 @@ export async function saveParentSettingsToFS(settings: ParentSettings): Promise<
     await writeTextFile(filePath, JSON.stringify(settings));
   } catch (e) {
     console.error('parent settings kaydetme hatası:', e);
+  }
+}
+
+// ── Supabase Cloud Sync ───────────────────────────────────────────────────────
+
+export async function syncProgressToSupabase(
+  userId: string,
+  profileId: string,
+  progress: UserProgress,
+): Promise<void> {
+  try {
+    await supabase.from('progress').upsert(
+      { owner_id: userId, profile_id: profileId, data: progress, updated_at: new Date().toISOString() },
+      { onConflict: 'owner_id,profile_id' },
+    );
+  } catch (e) {
+    console.error('Supabase sync hatası:', e);
+  }
+}
+
+export async function fetchProgressFromSupabase(
+  userId: string,
+  profileId: string,
+): Promise<UserProgress | null> {
+  try {
+    const { data, error } = await supabase
+      .from('progress')
+      .select('data')
+      .eq('owner_id', userId)
+      .eq('profile_id', profileId)
+      .single();
+    if (error || !data) return null;
+    return { ...defaultProgress, ...(data.data as Partial<UserProgress>) };
+  } catch {
+    return null;
   }
 }
