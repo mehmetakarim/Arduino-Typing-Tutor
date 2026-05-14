@@ -227,6 +227,62 @@ export async function saveParentSettingsToFS(settings: ParentSettings): Promise<
   }
 }
 
+// ── Supabase Profile Sync ─────────────────────────────────────────────────────
+
+export async function syncProfilesToSupabase(
+  userId: string,
+  profiles: Profile[],
+): Promise<void> {
+  try {
+    if (profiles.length === 0) return;
+    await supabase.from('profiles').upsert(
+      profiles.map(p => ({
+        id: p.id,
+        owner_id: userId,
+        name: p.name,
+        color: p.color,
+        emoji: p.emoji ?? null,
+        created_at: p.createdAt,
+      })),
+      { onConflict: 'id' },
+    );
+  } catch (e) {
+    console.error('profil sync hatası:', e);
+  }
+}
+
+export async function deleteProfileFromSupabase(
+  profileId: string,
+): Promise<void> {
+  try {
+    await supabase.from('profiles').delete().eq('id', profileId);
+  } catch (e) {
+    console.error('profil silme hatası:', e);
+  }
+}
+
+export async function fetchProfilesFromSupabase(
+  userId: string,
+): Promise<Profile[]> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, color, emoji, created_at')
+      .eq('owner_id', userId)
+      .order('created_at');
+    if (error || !data) return [];
+    return data.map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      name: r.name as string,
+      color: r.color as string,
+      emoji: (r.emoji as string) ?? undefined,
+      createdAt: r.created_at as string,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ── Supabase Cloud Sync ───────────────────────────────────────────────────────
 
 export async function syncProgressToSupabase(

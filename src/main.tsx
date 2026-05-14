@@ -15,15 +15,24 @@ import {
 import { useProfileStore } from "./store/profileStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useAuthStore } from "./store/authStore";
+import { fetchProfilesFromSupabase } from "./utils/storage";
 
 async function init() {
-  const [progress, settings, profiles, parentSettings] = await Promise.all([
+  const [progress, settings, localProfiles, parentSettings] = await Promise.all([
     loadProgressFromFS(),
     loadSettingsFromFS(),
     loadProfilesFromFS(),
     loadParentSettingsFromFS(),
     useAuthStore.getState().loadSession(),
   ]);
+
+  // Giriş yapılmışsa Supabase'den profilleri çek (yeniden kurulumda kurtarır)
+  const user = useAuthStore.getState().user;
+  const profiles = user
+    ? (await fetchProfilesFromSupabase(user.id)).length > 0
+      ? await fetchProfilesFromSupabase(user.id)
+      : localProfiles
+    : localProfiles;
 
   // Cache'i güncelle
   setCachedProgress(progress);

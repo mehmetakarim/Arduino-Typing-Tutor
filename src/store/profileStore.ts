@@ -10,7 +10,12 @@ import {
   loadProfileProgressFromFS,
   defaultProgress,
 } from '../utils/storage';
-import { setCachedProgress, fetchProgressFromSupabase } from '../utils/storage';
+import {
+  setCachedProgress,
+  fetchProgressFromSupabase,
+  syncProfilesToSupabase,
+  deleteProfileFromSupabase,
+} from '../utils/storage';
 import { setActiveProfileId, useProgressStore } from './progressStore';
 import { useAuthStore } from './authStore';
 
@@ -69,12 +74,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       ...(emoji ? { emoji } : {}),
       createdAt: new Date().toISOString(),
     };
-    // Yeni profil için boş progress dosyası oluştur
     await saveProfileProgressToFS(id, { ...defaultProgress });
 
     const updated = [...get().profiles, profile];
     setCachedProfiles(updated);
     saveProfilesToFS(updated); // fire-and-forget
+
+    const user = useAuthStore.getState().user;
+    if (user) syncProfilesToSupabase(user.id, updated); // fire-and-forget
+
     set({ profiles: updated });
     return profile;
   },
@@ -83,6 +91,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const updated = get().profiles.filter(p => p.id !== id);
     setCachedProfiles(updated);
     saveProfilesToFS(updated); // fire-and-forget
+
+    const user = useAuthStore.getState().user;
+    if (user) {
+      deleteProfileFromSupabase(id); // fire-and-forget
+    }
+
     set({ profiles: updated, activeProfile: get().activeProfile?.id === id ? null : get().activeProfile });
   },
 
