@@ -300,16 +300,11 @@ export async function syncProgressToSupabase(
   profileId: string,
   progress: UserProgress,
 ): Promise<void> {
-  console.log('[supabase sync] başlıyor…', userId, profileId);
   const { error } = await supabase.from('progress').upsert(
     { owner_id: userId, profile_id: profileId, data: progress, updated_at: new Date().toISOString() },
     { onConflict: 'owner_id,profile_id' },
   );
-  if (error) {
-    console.error('[supabase sync] HATA:', error.code, error.message, error.details);
-  } else {
-    console.log('[supabase sync] başarılı ✓');
-  }
+  if (error) console.error('[progress sync]', error.code, error.message);
 }
 
 export async function fetchProgressFromSupabase(
