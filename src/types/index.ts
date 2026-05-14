@@ -75,7 +75,8 @@ export type AppScreen =
   | 'result'
   | 'finalExam'
   | 'certificate'
-  | 'parent-panel';
+  | 'parent-panel'
+  | 'teacher-panel';
 
 export interface Profile {
   id: string;

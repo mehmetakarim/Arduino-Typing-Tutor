@@ -14,6 +14,7 @@ import {
 } from "./utils/storage";
 import { useProfileStore } from "./store/profileStore";
 import { useSettingsStore } from "./store/settingsStore";
+import { useAuthStore } from "./store/authStore";
 
 async function init() {
   const [progress, settings, profiles, parentSettings] = await Promise.all([
@@ -21,6 +22,7 @@ async function init() {
     loadSettingsFromFS(),
     loadProfilesFromFS(),
     loadParentSettingsFromFS(),
+    useAuthStore.getState().loadSession(),
   ]);
 
   // Cache'i güncelle

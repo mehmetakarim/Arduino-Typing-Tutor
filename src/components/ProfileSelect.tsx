@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useProfileStore, PROFILE_COLORS } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
+import { useAuthStore } from '../store/authStore';
+import { AuthScreen } from './AuthScreen';
 import { Profile } from '../types';
 
 export function ProfileSelect() {
@@ -8,6 +10,8 @@ export function ProfileSelect() {
   const { setScreen } = useProgressStore();
   const AVATARS = ['😀','🐱','🚀','🤖','⚡','🎮','🦊','🐧','🌟','🎯','🔥','🎸'];
 
+  const { user, signOut } = useAuthStore();
+  const [showAuth, setShowAuth] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [selectedColor, setSelectedColor] = useState(PROFILE_COLORS[0]);
@@ -36,6 +40,46 @@ export function ProfileSelect() {
 
   return (
     <div className="min-h-screen screen-bg flex flex-col items-center justify-center p-8">
+      {showAuth && <AuthScreen onClose={() => {
+        setShowAuth(false);
+        // Öğretmen girişi yaptıysa teacher-panel'e yönlendir
+        const { user } = useAuthStore.getState();
+        if (user?.role === 'teacher') setScreen('teacher-panel');
+      }} />}
+
+      {/* Üst sağ: giriş/çıkış */}
+      <div className="absolute top-4 right-4">
+        {user ? (
+          <div className="flex items-center gap-3">
+            <span className="text-gray-400 text-xs">
+              {user.role === 'teacher' ? '👨‍🏫' : '👪'} {user.fullName || user.email}
+            </span>
+            {user.role === 'teacher' && (
+              <button
+                onClick={() => setScreen('teacher-panel')}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/10 transition-colors"
+              >
+                Öğretmen Paneli
+              </button>
+            )}
+            <button
+              onClick={() => signOut()}
+              className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-white transition-colors"
+              style={{ backgroundColor: '#242425' }}
+            >
+              Çıkış
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAuth(true)}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/10 transition-colors"
+          >
+            Ebeveyn / Öğretmen Girişi
+          </button>
+        )}
+      </div>
+
       {/* Başlık */}
       <div className="mb-10 text-center">
         <div className="text-5xl mb-3">⌨️</div>
