@@ -48,17 +48,17 @@ export function ParentPanel() {
     }
 
     const profile = profiles.find(p => p.id === selectedProfileId);
-    const { error } = await supabase.from('class_members').upsert(
+    const { error } = await supabase.from('class_members').insert(
       { class_id: cls.id, profile_id: selectedProfileId, owner_id: user.id, student_name: profile?.name ?? 'Öğrenci' },
-      { onConflict: 'class_id,profile_id' },
     );
 
     setJoinLoading(false);
-    if (error) {
-      setJoinMsg({ type: 'err', text: 'Katılım başarısız, tekrar dene.' });
-    } else {
+    // 23505 = unique_violation (zaten üye)
+    if (!error || (error as { code?: string }).code === '23505') {
       setJoinMsg({ type: 'ok', text: `"${cls.name}" sınıfına katıldı!` });
       setClassCode('');
+    } else {
+      setJoinMsg({ type: 'err', text: 'Katılım başarısız, tekrar dene.' });
     }
   }
 

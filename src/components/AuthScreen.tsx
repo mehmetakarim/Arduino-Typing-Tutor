@@ -31,8 +31,8 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
     } else {
       const ok = await signUp(email, password, fullName, role);
       if (ok) {
-        setSuccess('Kayıt başarılı! E-posta onayı gerekebilir.');
-        setTimeout(onClose, 2000);
+        setSuccess('Kayıt başarılı! Giriş yapılıyor...');
+        setTimeout(onClose, 1200);
       }
     }
   }

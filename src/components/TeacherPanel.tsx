@@ -22,6 +22,13 @@ export function TeacherPanel() {
   const { user, signOut } = useAuthStore();
 
   const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  function copyCode(code: string) {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  }
   const [selectedClass, setSelectedClass] = useState<ClassInfo | null>(null);
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [newClassName, setNewClassName] = useState('');
@@ -170,7 +177,16 @@ export function TeacherPanel() {
                 >
                   <div>
                     <p className="text-white font-medium">{cls.name}</p>
-                    <p className="text-gray-500 text-xs mt-0.5">Katılım kodu: <span className="font-mono text-indigo-400">{cls.code}</span></p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-gray-500 text-xs">Katılım kodu:</span>
+                    <button
+                      onClick={e => { e.stopPropagation(); copyCode(cls.code); }}
+                      className="font-mono text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-0.5 rounded transition-colors"
+                      title="Kopyala"
+                    >
+                      {cls.code} {copiedCode === cls.code ? '✓' : '📋'}
+                    </button>
+                  </div>
                   </div>
                   <span className="text-gray-600 text-lg">→</span>
                 </button>
