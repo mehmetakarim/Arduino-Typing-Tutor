@@ -3,6 +3,11 @@ import { readTextFile, writeTextFile, mkdir, exists } from '@tauri-apps/plugin-f
 import { UserProgress, Profile, ParentSettings } from '../types';
 import { supabase } from '../lib/supabase';
 
+// Tauri desktop ortamında mıyız? (tarayıcıda değil)
+function isTauri(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+}
+
 // ── Tipler ──────────────────────────────────────────────────────────────────
 
 export interface Settings {
@@ -85,6 +90,7 @@ export async function loadProgressFromFS(): Promise<UserProgress> {
 }
 
 export async function saveProgressToFS(progress: UserProgress): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -128,6 +134,7 @@ export async function loadSettingsFromFS(): Promise<Settings> {
 }
 
 export async function saveSettingsToFS(settings: Settings): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -167,6 +174,7 @@ export async function loadProfilesFromFS(): Promise<Profile[]> {
 }
 
 export async function saveProfilesToFS(profiles: Profile[]): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -192,6 +200,7 @@ export async function loadProfileProgressFromFS(profileId: string): Promise<User
 }
 
 export async function saveProfileProgressToFS(profileId: string, progress: UserProgress): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     const profileDir = await join(dir, 'profiles', profileId);
@@ -217,6 +226,7 @@ export async function loadParentSettingsFromFS(): Promise<ParentSettings> {
 }
 
 export async function saveParentSettingsToFS(settings: ParentSettings): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -290,11 +300,16 @@ export async function syncProgressToSupabase(
   profileId: string,
   progress: UserProgress,
 ): Promise<void> {
+  console.log('[supabase sync] başlıyor…', userId, profileId);
   const { error } = await supabase.from('progress').upsert(
     { owner_id: userId, profile_id: profileId, data: progress, updated_at: new Date().toISOString() },
     { onConflict: 'owner_id,profile_id' },
   );
-  if (error) console.error('[progress sync]', error.code, error.message);
+  if (error) {
+    console.error('[supabase sync] HATA:', error.code, error.message, error.details);
+  } else {
+    console.log('[supabase sync] başarılı ✓');
+  }
 }
 
 export async function fetchProgressFromSupabase(
