@@ -14,7 +14,7 @@ import {
 type View = 'pin' | 'dashboard' | 'settings';
 
 export function ParentPanel() {
-  const { profiles, parentSettings, updateParentSettings, verifyPin } = useProfileStore();
+  const { profiles, parentSettings, updateParentSettings, verifyPin, deleteProfile } = useProfileStore();
   const { setScreen } = useProgressStore();
   const { user } = useAuthStore();
   const [view, setView] = useState<View>(parentSettings.pinEnabled ? 'pin' : 'dashboard');
@@ -24,6 +24,7 @@ export function ParentPanel() {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinEnabled, setPinEnabled] = useState(parentSettings.pinEnabled);
+  const [confirmDeleteProfile, setConfirmDeleteProfile] = useState<string | null>(null);
 
   // Sınıfa katılma
   const [classCode, setClassCode] = useState('');
@@ -165,10 +166,31 @@ export function ParentPanel() {
                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ backgroundColor: profile.color }}>
                       {profile.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-white font-semibold">{profile.name}</h3>
                       <p className="text-gray-500 text-xs">{stats.badges.length} rozet · {stats.currentStreak} gün seri</p>
                     </div>
+                    {/* Profil sil */}
+                    {confirmDeleteProfile === profile.id ? (
+                      <div className="flex gap-2 items-center">
+                        <span className="text-red-400 text-xs">Emin misin?</span>
+                        <button
+                          onClick={async () => { await deleteProfile(profile.id); setConfirmDeleteProfile(null); }}
+                          className="px-2 py-1 bg-red-500 hover:bg-red-400 text-white text-xs rounded-lg"
+                        >Sil</button>
+                        <button
+                          onClick={() => setConfirmDeleteProfile(null)}
+                          className="px-2 py-1 text-gray-400 hover:text-white text-xs rounded-lg"
+                          style={{ backgroundColor: '#242425' }}
+                        >İptal</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteProfile(profile.id)}
+                        className="text-gray-600 hover:text-red-400 text-xs transition-colors"
+                        title="Profili sil"
+                      >🗑️</button>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[

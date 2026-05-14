@@ -17,18 +17,18 @@ export function ProfileSelect() {
   const [newName, setNewName] = useState('');
   const [selectedColor, setSelectedColor] = useState(PROFILE_COLORS[0]);
   const [selectedEmoji, setSelectedEmoji] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null); // seçilen profil id'si
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   async function handleSelect(profile: Profile) {
-    setLoading(true);
+    setLoading(profile.id);
     await setActiveProfile(profile);
     setScreen('menu');
   }
 
   async function handleAdd() {
     if (!newName.trim()) return;
-    setLoading(true);
+    setLoading('new');
     const profile = await addProfile(newName, selectedColor, selectedEmoji);
     await setActiveProfile(profile);
     setScreen('menu');
@@ -98,7 +98,7 @@ export function ProfileSelect() {
           <div key={profile.id} className="relative group">
             <button
               onClick={() => handleSelect(profile)}
-              disabled={loading}
+              disabled={loading !== null}
               className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-white/10 hover:border-white/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#1A1A1B', minWidth: 140 }}
             >
@@ -107,15 +107,15 @@ export function ProfileSelect() {
                 className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
                 style={{ backgroundColor: profile.color }}
               >
-                {loading
-                ? <Spinner size={24} color="#fff" />
-                : profile.emoji ? profile.emoji : profile.name.charAt(0).toUpperCase()}
+                {loading === profile.id
+                  ? <Spinner size={24} color="#fff" />
+                  : profile.emoji ? profile.emoji : profile.name.charAt(0).toUpperCase()}
               </div>
               <span className="text-white font-medium text-sm">{profile.name}</span>
             </button>
 
-            {/* Sil butonu */}
-            {confirmDelete === profile.id ? (
+            {/* Sil butonu — giriş yapılmışsa gizle (silme sadece Ebeveyn Paneli'nden) */}
+            {!user && (confirmDelete === profile.id ? (
               <div className="absolute -top-2 -right-2 flex gap-1">
                 <button
                   onClick={() => handleDelete(profile.id)}
@@ -134,7 +134,7 @@ export function ProfileSelect() {
                 className="absolute -top-2 -right-2 w-6 h-6 bg-gray-700 hover:bg-red-500 text-gray-400 hover:text-white text-xs rounded-full items-center justify-center hidden group-hover:flex transition-colors"
                 title="Profili sil"
               >✕</button>
-            )}
+            ))}
           </div>
         ))}
 
@@ -211,7 +211,7 @@ export function ProfileSelect() {
           <div className="flex gap-3">
             <button
               onClick={handleAdd}
-              disabled={!newName.trim() || loading}
+              disabled={!newName.trim() || loading !== null}
               className="flex-1 py-2.5 rounded-xl font-semibold text-white disabled:opacity-40 transition-opacity"
               style={{ backgroundColor: selectedColor }}
             >
