@@ -7,6 +7,7 @@ import { ResultScreen } from './components/ResultScreen';
 import { Certificate } from './components/Certificate';
 import { ProfileSelect } from './components/ProfileSelect';
 import { ParentPanel } from './components/ParentPanel';
+import { TeacherPanel } from './components/TeacherPanel';
 import lessonsData from './data/lessons.json';
 import { AppScreen, Lesson } from './types';
 
@@ -20,6 +21,7 @@ const SCREEN_ANIMATION: Record<AppScreen, string> = {
   'finalExam':      'animate-slide-up',
   'certificate':    'animate-pop-in',
   'parent-panel':   'animate-slide-down',
+  'teacher-panel':  'animate-slide-down',
 };
 
 function ScreenWrapper({ screen, children }: { screen: AppScreen; children: React.ReactNode }) {
@@ -40,7 +42,7 @@ export default function App() {
     ? (lessonsData.find(l => l.id === activeLessonId) as Lesson | undefined)
     : null;
 
-  if (!activeProfile && screen !== 'parent-panel') {
+  if (!activeProfile && screen !== 'parent-panel' && screen !== 'teacher-panel') {
     return (
       <div className="min-h-screen bg-gray-900 text-white">
         <div className="animate-fade-in">
@@ -61,6 +63,7 @@ export default function App() {
         {screen === 'result' && <ResultScreen />}
         {screen === 'certificate' && <Certificate />}
         {screen === 'parent-panel' && <ParentPanel />}
+        {screen === 'teacher-panel' && <TeacherPanel />}
       </ScreenWrapper>
     </div>
   );
