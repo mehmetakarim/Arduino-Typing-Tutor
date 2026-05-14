@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Spinner } from './Spinner';
 import { useProgressStore } from '../store/progressStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
@@ -158,7 +159,9 @@ export function TeacherPanel() {
                 disabled={!newClassName.trim() || loading}
                 className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-40 transition-colors"
               >
-                Oluştur
+                {loading
+                  ? <span className="flex items-center gap-2"><Spinner size={14} /> Oluşturuluyor...</span>
+                  : 'Oluştur'}
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
 import { useAuthStore } from '../store/authStore';
 import { loadProfileProgressFromFS } from '../utils/storage';
+import { Spinner } from './Spinner';
 import { supabase } from '../lib/supabase';
 import { UserProgress } from '../types';
 import {
@@ -272,7 +273,9 @@ export function ParentPanel() {
                 disabled={!classCode.trim() || joinLoading}
                 className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-40 transition-colors whitespace-nowrap"
               >
-                {joinLoading ? 'Katılıyor...' : 'Katıl'}
+                {joinLoading
+                  ? <span className="flex items-center gap-2"><Spinner size={14} /> Katılıyor...</span>
+                  : 'Katıl'}
               </button>
             </div>
             {joinMsg && (

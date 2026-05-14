@@ -9,12 +9,11 @@ import {
   saveParentSettingsToFS,
   loadProfileProgressFromFS,
   defaultProgress,
-} from '../utils/storage';
-import {
   setCachedProgress,
   fetchProgressFromSupabase,
   syncProfilesToSupabase,
   deleteProfileFromSupabase,
+  fetchProfilesFromSupabase,
 } from '../utils/storage';
 import { setActiveProfileId, useProgressStore } from './progressStore';
 import { useAuthStore } from './authStore';
@@ -41,6 +40,7 @@ interface ProfileState {
   deleteProfile: (id: string) => Promise<void>;
   updateParentSettings: (settings: ParentSettings) => void;
   verifyPin: (pin: string) => boolean;
+  reloadProfilesFromCloud: () => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -109,5 +109,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const { parentSettings } = get();
     if (!parentSettings.pinEnabled || !parentSettings.pin) return true;
     return parentSettings.pin === pin;
+  },
+
+  reloadProfilesFromCloud: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) return;
+    const cloud = await fetchProfilesFromSupabase(user.id);
+    if (cloud.length === 0) return;
+    setCachedProfiles(cloud);
+    saveProfilesToFS(cloud); // yerel cache'i de güncelle
+    set({ profiles: cloud });
   },
 }));

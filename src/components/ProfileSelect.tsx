@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useProfileStore, PROFILE_COLORS } from '../store/profileStore';
+import { Spinner } from './Spinner';
 import { useProgressStore } from '../store/progressStore';
 import { useAuthStore } from '../store/authStore';
 import { AuthScreen } from './AuthScreen';
@@ -40,11 +41,15 @@ export function ProfileSelect() {
 
   return (
     <div className="min-h-screen screen-bg flex flex-col items-center justify-center p-8">
-      {showAuth && <AuthScreen onClose={() => {
+      {showAuth && <AuthScreen onClose={async () => {
         setShowAuth(false);
-        // Öğretmen girişi yaptıysa teacher-panel'e yönlendir
         const { user } = useAuthStore.getState();
-        if (user?.role === 'teacher') setScreen('teacher-panel');
+        if (user?.role === 'teacher') {
+          setScreen('teacher-panel');
+        } else if (user) {
+          // Ebeveyn: Supabase'den profilleri çek ve store'u güncelle
+          await useProfileStore.getState().reloadProfilesFromCloud();
+        }
       }} />}
 
       {/* Üst sağ: giriş/çıkış */}
@@ -102,7 +107,9 @@ export function ProfileSelect() {
                 className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
                 style={{ backgroundColor: profile.color }}
               >
-                {profile.emoji ? profile.emoji : profile.name.charAt(0).toUpperCase()}
+                {loading
+                ? <Spinner size={24} color="#fff" />
+                : profile.emoji ? profile.emoji : profile.name.charAt(0).toUpperCase()}
               </div>
               <span className="text-white font-medium text-sm">{profile.name}</span>
             </button>
