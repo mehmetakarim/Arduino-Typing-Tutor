@@ -300,11 +300,16 @@ export async function syncProgressToSupabase(
   profileId: string,
   progress: UserProgress,
 ): Promise<void> {
-  const { error } = await supabase.from('progress').upsert(
-    { owner_id: userId, profile_id: profileId, data: progress, updated_at: new Date().toISOString() },
-    { onConflict: 'owner_id,profile_id' },
-  );
-  if (error) console.error('[progress sync]', error.code, error.message);
+  const payload = { owner_id: userId, profile_id: profileId, data: progress, updated_at: new Date().toISOString() };
+  const opts = { onConflict: 'owner_id,profile_id' } as const;
+
+  const { error } = await supabase.from('progress').upsert(payload, opts);
+  if (!error) return;
+
+  // Geçici ağ hatasında 3 sn sonra bir kez daha dene
+  await new Promise(r => setTimeout(r, 3000));
+  const { error: retryError } = await supabase.from('progress').upsert(payload, opts);
+  if (retryError) console.error('[progress sync]', retryError.code, retryError.message);
 }
 
 export async function fetchProgressFromSupabase(
