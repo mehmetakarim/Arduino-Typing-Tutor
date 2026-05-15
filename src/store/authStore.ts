@@ -43,15 +43,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email, password, fullName, role) => {
     set({ loading: true, error: null });
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { role, full_name: fullName } },
+      });
       if (error) { set({ error: error.message, loading: false }); return false; }
       if (!data.user) { set({ error: 'Kayıt başarısız.', loading: false }); return false; }
 
-      await supabase.from('user_roles').insert({
-        id: data.user.id,
-        role,
-        full_name: fullName,
-      });
+      // Trigger yoksa fallback olarak manuel insert dene
+      await supabase.from('user_roles').upsert(
+        { id: data.user.id, role, full_name: fullName },
+        { onConflict: 'id' },
+      );
 
       set({
         user: { id: data.user.id, email, role, fullName },

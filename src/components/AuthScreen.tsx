@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { UserRole } from '../lib/supabase';
+import { Spinner } from './Spinner';
 
 type Mode = 'login' | 'register';
 
@@ -31,8 +32,8 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
     } else {
       const ok = await signUp(email, password, fullName, role);
       if (ok) {
-        setSuccess('Kayıt başarılı! E-posta onayı gerekebilir.');
-        setTimeout(onClose, 2000);
+        setSuccess('Kayıt başarılı! Giriş yapılıyor...');
+        setTimeout(onClose, 1200);
       }
     }
   }
@@ -124,7 +125,11 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
             disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Lütfen bekle...' : mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Spinner size={16} /> Lütfen bekle...
+              </span>
+            ) : mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
           </button>
         </form>
 

@@ -9,9 +9,14 @@ import {
   saveParentSettingsToFS,
   loadProfileProgressFromFS,
   defaultProgress,
+  setCachedProgress,
+  fetchProgressFromSupabase,
+  syncProfilesToSupabase,
+  deleteProfileFromSupabase,
+  fetchProfilesFromSupabase,
 } from '../utils/storage';
-import { setCachedProgress } from '../utils/storage';
 import { setActiveProfileId, useProgressStore } from './progressStore';
+import { useAuthStore } from './authStore';
 
 // Profil renk seçenekleri
 export const PROFILE_COLORS = [
@@ -35,6 +40,7 @@ interface ProfileState {
   deleteProfile: (id: string) => Promise<void>;
   updateParentSettings: (settings: ParentSettings) => void;
   verifyPin: (pin: string) => boolean;
+  reloadProfilesFromCloud: () => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -43,10 +49,18 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   parentSettings: getCachedParentSettings(),
 
   setActiveProfile: async (profile) => {
-    const progress = await loadProfileProgressFromFS(profile.id);
+    // Önce FS'ten yükle (hızlı, offline çalışır)
+    let progress = await loadProfileProgressFromFS(profile.id);
+
+    // Giriş yapılmışsa Supabase'den dene — daha güncel olabilir
+    const user = useAuthStore.getState().user;
+    if (user) {
+      const cloud = await fetchProgressFromSupabase(user.id, profile.id);
+      if (cloud) progress = cloud;
+    }
+
     setCachedProgress(progress);
     setActiveProfileId(profile.id);
-    // progressStore state'ini de güncelle — sadece cache değil store da yenilenmeli
     useProgressStore.setState({ progress, screen: 'menu', activeLessonId: null, lastResult: null });
     set({ activeProfile: profile });
   },
@@ -60,12 +74,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       ...(emoji ? { emoji } : {}),
       createdAt: new Date().toISOString(),
     };
-    // Yeni profil için boş progress dosyası oluştur
     await saveProfileProgressToFS(id, { ...defaultProgress });
 
     const updated = [...get().profiles, profile];
     setCachedProfiles(updated);
     saveProfilesToFS(updated); // fire-and-forget
+
+    const user = useAuthStore.getState().user;
+    if (user) syncProfilesToSupabase(user.id, updated); // fire-and-forget
+
     set({ profiles: updated });
     return profile;
   },
@@ -74,6 +91,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const updated = get().profiles.filter(p => p.id !== id);
     setCachedProfiles(updated);
     saveProfilesToFS(updated); // fire-and-forget
+
+    const user = useAuthStore.getState().user;
+    if (user) {
+      deleteProfileFromSupabase(id); // fire-and-forget
+    }
+
     set({ profiles: updated, activeProfile: get().activeProfile?.id === id ? null : get().activeProfile });
   },
 
@@ -86,5 +109,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     const { parentSettings } = get();
     if (!parentSettings.pinEnabled || !parentSettings.pin) return true;
     return parentSettings.pin === pin;
+  },
+
+  reloadProfilesFromCloud: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) return;
+    const cloud = await fetchProfilesFromSupabase(user.id);
+    if (cloud.length === 0) return;
+    setCachedProfiles(cloud);
+    saveProfilesToFS(cloud); // yerel cache'i de güncelle
+    set({ profiles: cloud });
   },
 }));

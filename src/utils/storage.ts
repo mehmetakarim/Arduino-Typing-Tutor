@@ -1,6 +1,12 @@
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { readTextFile, writeTextFile, mkdir, exists } from '@tauri-apps/plugin-fs';
 import { UserProgress, Profile, ParentSettings } from '../types';
+import { supabase } from '../lib/supabase';
+
+// Tauri desktop ortamında mıyız? (tarayıcıda değil)
+function isTauri(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+}
 
 // ── Tipler ──────────────────────────────────────────────────────────────────
 
@@ -84,6 +90,7 @@ export async function loadProgressFromFS(): Promise<UserProgress> {
 }
 
 export async function saveProgressToFS(progress: UserProgress): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -127,6 +134,7 @@ export async function loadSettingsFromFS(): Promise<Settings> {
 }
 
 export async function saveSettingsToFS(settings: Settings): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -166,6 +174,7 @@ export async function loadProfilesFromFS(): Promise<Profile[]> {
 }
 
 export async function saveProfilesToFS(profiles: Profile[]): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -191,6 +200,7 @@ export async function loadProfileProgressFromFS(profileId: string): Promise<User
 }
 
 export async function saveProfileProgressToFS(profileId: string, progress: UserProgress): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     const profileDir = await join(dir, 'profiles', profileId);
@@ -216,6 +226,7 @@ export async function loadParentSettingsFromFS(): Promise<ParentSettings> {
 }
 
 export async function saveParentSettingsToFS(settings: ParentSettings): Promise<void> {
+  if (!isTauri()) return;
   try {
     const dir = await appDataDir();
     await ensureAppDir(dir);
@@ -223,5 +234,93 @@ export async function saveParentSettingsToFS(settings: ParentSettings): Promise<
     await writeTextFile(filePath, JSON.stringify(settings));
   } catch (e) {
     console.error('parent settings kaydetme hatası:', e);
+  }
+}
+
+// ── Supabase Profile Sync ─────────────────────────────────────────────────────
+
+export async function syncProfilesToSupabase(
+  userId: string,
+  profiles: Profile[],
+): Promise<void> {
+  try {
+    if (profiles.length === 0) return;
+    await supabase.from('profiles').upsert(
+      profiles.map(p => ({
+        id: p.id,
+        owner_id: userId,
+        name: p.name,
+        color: p.color,
+        emoji: p.emoji ?? null,
+        created_at: p.createdAt,
+      })),
+      { onConflict: 'id' },
+    );
+  } catch (e) {
+    console.error('profil sync hatası:', e);
+  }
+}
+
+export async function deleteProfileFromSupabase(
+  profileId: string,
+): Promise<void> {
+  try {
+    await supabase.from('profiles').delete().eq('id', profileId);
+  } catch (e) {
+    console.error('profil silme hatası:', e);
+  }
+}
+
+export async function fetchProfilesFromSupabase(
+  userId: string,
+): Promise<Profile[]> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, color, emoji, created_at')
+      .eq('owner_id', userId)
+      .order('created_at');
+    if (error || !data) return [];
+    return data.map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      name: r.name as string,
+      color: r.color as string,
+      emoji: (r.emoji as string) ?? undefined,
+      createdAt: r.created_at as string,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ── Supabase Cloud Sync ───────────────────────────────────────────────────────
+
+export async function syncProgressToSupabase(
+  userId: string,
+  profileId: string,
+  progress: UserProgress,
+): Promise<void> {
+  const { error } = await supabase.from('progress').upsert(
+    { owner_id: userId, profile_id: profileId, data: progress, updated_at: new Date().toISOString() },
+    { onConflict: 'owner_id,profile_id' },
+  );
+  if (error) console.error('[progress sync]', error.code, error.message);
+}
+
+export async function fetchProgressFromSupabase(
+  userId: string,
+  profileId: string,
+): Promise<UserProgress | null> {
+  try {
+    const { data, error } = await supabase
+      .from('progress')
+      .select('data')
+      .eq('owner_id', userId)
+      .eq('profile_id', profileId)
+      .single();
+    if (error || !data) return null;
+    return { ...defaultProgress, ...(data.data as Partial<UserProgress>) };
+  } catch {
+    return null;
   }
 }

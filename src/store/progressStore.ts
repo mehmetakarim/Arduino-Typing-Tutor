@@ -6,8 +6,10 @@ import {
   saveProgressToFS,
   saveProfileProgressToFS,
   resetProgressFS,
+  syncProgressToSupabase,
   defaultProgress,
 } from '../utils/storage';
+import { useAuthStore } from './authStore';
 
 const ALL_BADGES = [
   { id: 'first_lesson',  check: (p: UserProgress) => p.completedLessons.length >= 1 },
@@ -36,6 +38,8 @@ function save(progress: UserProgress) {
   setCachedProgress(progress);
   if (_activeProfileId) {
     saveProfileProgressToFS(_activeProfileId, progress); // fire-and-forget
+    const user = useAuthStore.getState().user;
+    if (user) syncProgressToSupabase(user.id, _activeProfileId, progress); // fire-and-forget
   } else {
     saveProgressToFS(progress); // fire-and-forget
   }

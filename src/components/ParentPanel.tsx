@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
+import { useAuthStore } from '../store/authStore';
 import { loadProfileProgressFromFS } from '../utils/storage';
+import { Spinner } from './Spinner';
+import { supabase } from '../lib/supabase';
 import { UserProgress } from '../types';
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
@@ -11,8 +14,9 @@ import {
 type View = 'pin' | 'dashboard' | 'settings';
 
 export function ParentPanel() {
-  const { profiles, parentSettings, updateParentSettings, verifyPin } = useProfileStore();
+  const { profiles, parentSettings, updateParentSettings, verifyPin, deleteProfile } = useProfileStore();
   const { setScreen } = useProgressStore();
+  const { user } = useAuthStore();
   const [view, setView] = useState<View>(parentSettings.pinEnabled ? 'pin' : 'dashboard');
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -20,6 +24,45 @@ export function ParentPanel() {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [pinEnabled, setPinEnabled] = useState(parentSettings.pinEnabled);
+  const [confirmDeleteProfile, setConfirmDeleteProfile] = useState<string | null>(null);
+
+  // Sınıfa katılma
+  const [classCode, setClassCode] = useState('');
+  const [selectedProfileId, setSelectedProfileId] = useState(profiles[0]?.id ?? '');
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinMsg, setJoinMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  async function handleJoinClass() {
+    if (!classCode.trim() || !selectedProfileId || !user) return;
+    setJoinLoading(true);
+    setJoinMsg(null);
+
+    const { data: cls } = await supabase
+      .from('classes')
+      .select('id, name')
+      .eq('code', classCode.trim().toUpperCase())
+      .single();
+
+    if (!cls) {
+      setJoinMsg({ type: 'err', text: 'Sınıf kodu bulunamadı.' });
+      setJoinLoading(false);
+      return;
+    }
+
+    const profile = profiles.find(p => p.id === selectedProfileId);
+    const { error } = await supabase.from('class_members').insert(
+      { class_id: cls.id, profile_id: selectedProfileId, owner_id: user.id, student_name: profile?.name ?? 'Öğrenci' },
+    );
+
+    setJoinLoading(false);
+    // 23505 = unique_violation (zaten üye)
+    if (!error || (error as { code?: string }).code === '23505') {
+      setJoinMsg({ type: 'ok', text: `"${cls.name}" sınıfına katıldı!` });
+      setClassCode('');
+    } else {
+      setJoinMsg({ type: 'err', text: 'Katılım başarısız, tekrar dene.' });
+    }
+  }
 
   // PIN yoksa dashboard açılır, istatistikleri hemen yükle
   useEffect(() => {
@@ -123,10 +166,31 @@ export function ParentPanel() {
                     <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ backgroundColor: profile.color }}>
                       {profile.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-white font-semibold">{profile.name}</h3>
                       <p className="text-gray-500 text-xs">{stats.badges.length} rozet · {stats.currentStreak} gün seri</p>
                     </div>
+                    {/* Profil sil */}
+                    {confirmDeleteProfile === profile.id ? (
+                      <div className="flex gap-2 items-center">
+                        <span className="text-red-400 text-xs">Emin misin?</span>
+                        <button
+                          onClick={async () => { await deleteProfile(profile.id); setConfirmDeleteProfile(null); }}
+                          className="px-2 py-1 bg-red-500 hover:bg-red-400 text-white text-xs rounded-lg"
+                        >Sil</button>
+                        <button
+                          onClick={() => setConfirmDeleteProfile(null)}
+                          className="px-2 py-1 text-gray-400 hover:text-white text-xs rounded-lg"
+                          style={{ backgroundColor: '#242425' }}
+                        >İptal</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteProfile(profile.id)}
+                        className="text-gray-600 hover:text-red-400 text-xs transition-colors"
+                        title="Profili sil"
+                      >🗑️</button>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -201,6 +265,46 @@ export function ParentPanel() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Sınıfa Katıl — sadece giriş yapılmışsa */}
+        {user && statsLoaded && (
+          <div className="mt-6 rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
+            <h3 className="text-white font-semibold mb-4">📚 Öğretmen Sınıfına Katıl</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <select
+                value={selectedProfileId}
+                onChange={e => setSelectedProfileId(e.target.value)}
+                className="bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-indigo-500"
+              >
+                {profiles.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Sınıf kodu (ör. ATT-5A)"
+                value={classCode}
+                onChange={e => { setClassCode(e.target.value); setJoinMsg(null); }}
+                onKeyDown={e => e.key === 'Enter' && handleJoinClass()}
+                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 text-sm outline-none focus:border-indigo-500"
+              />
+              <button
+                onClick={handleJoinClass}
+                disabled={!classCode.trim() || joinLoading}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-40 transition-colors whitespace-nowrap"
+              >
+                {joinLoading
+                  ? <span className="flex items-center gap-2"><Spinner size={14} /> Katılıyor...</span>
+                  : 'Katıl'}
+              </button>
+            </div>
+            {joinMsg && (
+              <p className={`mt-3 text-xs px-3 py-2 rounded-lg ${joinMsg.type === 'ok' ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                {joinMsg.text}
+              </p>
+            )}
           </div>
         )}
 
