@@ -3,6 +3,11 @@ import { Spinner } from './Spinner';
 import { useProgressStore } from '../store/progressStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { appDataDir, join } from '@tauri-apps/api/path';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
+import { openPath } from '@tauri-apps/plugin-opener';
+
+function isTauri() { return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window; }
 
 interface ClassInfo { id: string; name: string; code: string; }
 
@@ -55,23 +60,34 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(h / 24)}g önce`;
 }
 
-function downloadCsv(className: string, students: StudentStat[]) {
+async function downloadCsv(className: string, students: StudentStat[]) {
   const rows = [
     ['Sıra', 'Öğrenci', 'Ort. WPM', 'Doğruluk (%)', 'Tamamlanan Ders', 'Rozet', 'En Uzun Seri', 'Son Güncelleme'],
     ...students.map((s, i) => [
       i + 1, s.studentName, s.avgWpm, s.avgAccuracy,
       s.completedLessons, s.badgeCount, s.longestStreak,
-      s.updatedAt ? new Date(s.updatedAt).toLocaleString('tr-TR') : '—',
+      s.updatedAt ? new Date(s.updatedAt).toLocaleString('tr-TR') : '-',
     ]),
   ];
   const csv = rows.map(r => r.join(',')).join('\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${className}-rapor-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const filename = `${className}-rapor-${new Date().toISOString().slice(0, 10)}.csv`;
+
+  if (isTauri()) {
+    // Tauri: uygulama dizinine yaz, sistem varsayılan uygulamasıyla aç
+    const dir = await appDataDir();
+    const filePath = await join(dir, filename);
+    await writeTextFile(filePath, '﻿' + csv); // BOM — Excel Türkçe uyumu
+    await openPath(filePath);
+  } else {
+    // Tarayıcı fallback
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  }
 }
 
 export function TeacherPanel() {
@@ -341,7 +357,7 @@ export function TeacherPanel() {
               {/* CSV Rapor İndir */}
               <div className="flex justify-end">
                 <button
-                  onClick={() => downloadCsv(selectedClass.name, students)}
+                  onClick={() => void downloadCsv(selectedClass.name, students)}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10 hover:border-white/20 transition-all"
                   style={{ backgroundColor: '#1A1A1B' }}
                 >
