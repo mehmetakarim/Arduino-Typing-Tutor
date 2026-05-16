@@ -62,7 +62,7 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
-      # ── macOS güncelleme manifesti ──────────────────────────────────────────
+      # ── macOS: güncelleme manifesti ─────────────────────────────────────────
       - name: macOS güncelleme manifesti oluştur
         if: matrix.platform == 'macos-latest'
         shell: bash
@@ -71,30 +71,20 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG="v${VERSION}"
-          SIG_FILE="src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Arduino Typing Tutor.app.tar.gz.sig"
-          SIG=$(cat "$SIG_FILE")
           PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          python3 -c "
-import json, sys
-sig = open(sys.argv[1]).read().strip()
-data = {
-  'version': sys.argv[2],
-  'pub_date': sys.argv[3],
-  'notes': '',
-  'platforms': {
-    'darwin-aarch64': {
-      'signature': sig,
-      'url': 'https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/' + sys.argv[4] + '/Arduino.Typing.Tutor_aarch64.app.tar.gz'
-    }
-  }
-}
-with open('latest-darwin-aarch64.json', 'w') as f:
-  json.dump(data, f, indent=2)
-print('macOS JSON oluşturuldu')
-" "$SIG_FILE" "$VERSION" "$PUB_DATE" "$TAG"
+          SIG=$(cat "src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Arduino Typing Tutor.app.tar.gz.sig")
+          URL="https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/${TAG}/Arduino.Typing.Tutor_aarch64.app.tar.gz"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg pub_date "$PUB_DATE" \
+            --arg sig "$SIG" \
+            --arg url "$URL" \
+            '{"version":$version,"pub_date":$pub_date,"notes":"","platforms":{"darwin-aarch64":{"signature":$sig,"url":$url}}}' \
+            > latest-darwin-aarch64.json
           gh release upload "$TAG" latest-darwin-aarch64.json --clobber
+          echo "macOS manifesti yüklendi: latest-darwin-aarch64.json"
 
-      # ── Windows güncelleme manifesti ────────────────────────────────────────
+      # ── Windows: güncelleme manifesti ───────────────────────────────────────
       - name: Windows güncelleme manifesti oluştur
         if: matrix.platform == 'windows-latest'
         shell: pwsh
@@ -104,34 +94,26 @@ print('macOS JSON oluşturuldu')
           $VERSION = node -p "require('./package.json').version"
           $TAG = "v$VERSION"
           $PUB_DATE = (Get-Date -AsUTC).ToString("yyyy-MM-ddTHH:mm:ssZ")
-
-          # NSIS zip ve sig dosyalarını bul
           $NSIS_ZIP = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.nsis.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $NSIS_ZIP) {
-            Write-Host "NSIS zip bulunamadı, mevcut dosyalar:"
+            Write-Host "NSIS zip bulunamadi, bundle dizini:"
             Get-ChildItem -Path "src-tauri\target\release\bundle" -Recurse | Select-Object FullName
             exit 0
           }
-
-          $SIG_PATH = "$($NSIS_ZIP.FullName).sig"
-          $SIG = (Get-Content $SIG_PATH -Raw).Trim()
-          $NSIS_NAME = $NSIS_ZIP.Name
-
-          # NSIS zip'i release'e yükle
+          $SIG = (Get-Content "$($NSIS_ZIP.FullName).sig" -Raw).Trim()
+          $URL = "https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/$TAG/$($NSIS_ZIP.Name)"
           gh release upload $TAG $NSIS_ZIP.FullName --clobber
-
-          # Manifest JSON oluştur
-          $JSON = [ordered]@{
+          $json = [ordered]@{
             version  = $VERSION
             pub_date = $PUB_DATE
             notes    = ""
             platforms = [ordered]@{
               "windows-x86_64" = [ordered]@{
                 signature = $SIG
-                url = "https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/$TAG/$NSIS_NAME"
+                url       = $URL
               }
             }
-          }
-          $JSON | ConvertTo-Json -Depth 5 | Out-File -FilePath "latest-windows-x86_64.json" -Encoding UTF8NoBOM
+          } | ConvertTo-Json -Depth 5
+          [System.IO.File]::WriteAllText("latest-windows-x86_64.json", $json, [System.Text.UTF8Encoding]::new($false))
           gh release upload $TAG "latest-windows-x86_64.json" --clobber
-          Write-Host "Windows manifesti yüklendi."
+          Write-Host "Windows manifesti yuklendi: latest-windows-x86_64.json"
