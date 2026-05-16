@@ -87,7 +87,9 @@ jobs:
           # Private key'i geçici dosyaya yaz (base64 decode)
           echo "$TAURI_SIGNING_PRIVATE_KEY" | base64 -d > /tmp/tauri_key.key
 
-          # İmzala → .sig dosyası oluşur
+          # İmzala — TAURI_SIGNING_PRIVATE_KEY unset edilmeli, yoksa CLI
+          # env var'ı --private-key olarak görür ve --private-key-path ile çakışır
+          unset TAURI_SIGNING_PRIVATE_KEY
           npm run tauri -- signer sign \
             --private-key-path /tmp/tauri_key.key \
             --password "" \
