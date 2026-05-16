@@ -17,6 +17,7 @@ import {
 } from '../utils/storage';
 import { setActiveProfileId, useProgressStore } from './progressStore';
 import { useAuthStore } from './authStore';
+import { useNotesStore } from './notesStore';
 
 // Profil renk seçenekleri
 export const PROFILE_COLORS = [
@@ -63,6 +64,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     setActiveProfileId(profile.id);
     useProgressStore.setState({ progress, screen: 'menu', activeLessonId: null, lastResult: null });
     set({ activeProfile: profile });
+    // Okunmamış öğretmen notlarını çek (Supabase bağlantısı varsa)
+    if (user) void useNotesStore.getState().loadNotes(profile.id);
   },
 
   addProfile: async (name, color, emoji) => {

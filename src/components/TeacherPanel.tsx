@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { downloadDir, join } from '@tauri-apps/api/path';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
+import { addTeacherNote } from '../utils/storage';
 
 function isTauri() { return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window; }
 
@@ -102,6 +103,9 @@ export function TeacherPanel() {
   const [tab, setTab] = useState<'classes' | 'leaderboard'>('classes');
   const [live, setLive] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [noteTarget, setNoteTarget] = useState<StudentStat | null>(null);
+  const [noteContent, setNoteContent] = useState('');
+  const [noteSending, setNoteSending] = useState(false);
   const toastId = useRef(0);
   const prevStudents = useRef<StudentStat[]>([]);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -320,6 +324,7 @@ export function TeacherPanel() {
                       <th className="text-right px-5 py-3 text-gray-500 font-medium">Ders</th>
                       <th className="text-right px-5 py-3 text-gray-500 font-medium">Rozet</th>
                       <th className="text-right px-5 py-3 text-gray-500 font-medium">Son Aktif</th>
+                      <th className="px-5 py-3"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -347,11 +352,72 @@ export function TeacherPanel() {
                         <td className="px-5 py-3 text-right text-gray-300">{s.completedLessons}</td>
                         <td className="px-5 py-3 text-right text-gray-400">{s.badgeCount > 0 ? `🏅 ${s.badgeCount}` : '—'}</td>
                         <td className="px-5 py-3 text-right text-gray-600 text-xs">{timeAgo(s.updatedAt)}</td>
+                        <td className="px-5 py-3 text-center">
+                          <button
+                            onClick={() => { setNoteTarget(s); setNoteContent(''); }}
+                            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
+                            title="Not bırak"
+                          >
+                            📝
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* Not yazma modalı */}
+              {noteTarget && (
+                <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-4">
+                  <p className="text-indigo-300 text-sm font-semibold mb-2">
+                    📝 {noteTarget.studentName} için not
+                  </p>
+                  <textarea
+                    value={noteContent}
+                    onChange={e => setNoteContent(e.target.value.slice(0, 500))}
+                    placeholder="Öğrenciye bırakmak istediğin notu yaz… (max 500 karakter)"
+                    className="w-full rounded-lg bg-white/5 border border-white/10 text-white text-sm p-3 resize-none outline-none focus:border-indigo-500/50 transition-colors"
+                    rows={3}
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-gray-600 text-xs">{noteContent.length}/500</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setNoteTarget(null)}
+                        className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                      >
+                        İptal
+                      </button>
+                      <button
+                        disabled={!noteContent.trim() || noteSending}
+                        onClick={async () => {
+                          if (!user || !selectedClass || !noteContent.trim()) return;
+                          setNoteSending(true);
+                          const ok = await addTeacherNote(
+                            user.id,
+                            selectedClass.id,
+                            noteTarget.profileId,
+                            noteTarget.studentName,
+                            noteContent,
+                          );
+                          setNoteSending(false);
+                          if (ok) {
+                            addToast(`✅ Not gönderildi: ${noteTarget.studentName}`);
+                            setNoteTarget(null);
+                            setNoteContent('');
+                          } else {
+                            addToast('❌ Not gönderilemedi, tekrar dene');
+                          }
+                        }}
+                        className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white transition-colors"
+                      >
+                        {noteSending ? 'Gönderiliyor…' : 'Gönder'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* CSV Rapor İndir */}
               <div className="flex justify-end">

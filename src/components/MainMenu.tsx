@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useProgressStore } from '../store/progressStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useProfileStore } from '../store/profileStore';
+import { useNotesStore } from '../store/notesStore';
 import { StatsChart } from './StatsChart';
 import { SettingsModal } from './SettingsModal';
+import { TeacherNotesModal } from './TeacherNotesModal';
 import lessonsData from '../data/lessons.json';
 import modulesData from '../data/modules.json';
 
@@ -44,9 +46,11 @@ export function MainMenu() {
   const { theme } = useSettingsStore();
   const { activeProfile } = useProfileStore();
   const isLight = theme === 'light';
+  const { unreadNotes } = useNotesStore();
   const [showReset, setShowReset] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   const totalLessons = lessonsData.filter(l => !l.isExam).length;
   // Sadece sınav olmayan dersleri say (sınav ID'leri hariç, tekrar oynananlar hariç)
@@ -74,6 +78,7 @@ export function MainMenu() {
   return (
     <>
     {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+    {showNotes && <TeacherNotesModal onClose={() => setShowNotes(false)} />}
     <div className="flex flex-col min-h-screen bg-gray-900 text-white overflow-auto">
       {/* Header with level */}
       <div
@@ -203,6 +208,25 @@ export function MainMenu() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Öğretmen notu banner */}
+        {unreadNotes.length > 0 && (
+          <button
+            onClick={() => setShowNotes(true)}
+            className="w-full mb-4 flex items-center justify-between gap-3 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-3 text-left hover:bg-indigo-500/20 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">📬</span>
+              <div>
+                <p className="text-indigo-300 text-sm font-semibold">
+                  Öğretmeninden {unreadNotes.length} yeni not var
+                </p>
+                <p className="text-indigo-400/60 text-xs">Görüntülemek için tıkla</p>
+              </div>
+            </div>
+            <span className="text-indigo-400 text-lg">›</span>
+          </button>
         )}
 
         {/* Modules */}

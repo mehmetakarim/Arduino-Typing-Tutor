@@ -101,6 +101,17 @@ export interface TypingResult {
   errorKeyMap: Record<string, number>;
 }
 
+export interface TeacherNote {
+  id: string;
+  teacherId: string;
+  classId: string;
+  profileId: string;
+  studentName: string;
+  content: string;
+  createdAt: string;
+  readAt: string | null;
+}
+
 export const FINGER_COLORS: Record<FingerName, string> = {
   leftPinky:   '#9333EA',
   leftRing:    '#3B82F6',

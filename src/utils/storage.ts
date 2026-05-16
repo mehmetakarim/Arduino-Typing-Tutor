@@ -1,6 +1,6 @@
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { readTextFile, writeTextFile, mkdir, exists } from '@tauri-apps/plugin-fs';
-import { UserProgress, Profile, ParentSettings } from '../types';
+import { UserProgress, Profile, ParentSettings, TeacherNote } from '../types';
 import { supabase } from '../lib/supabase';
 
 // Tauri desktop ortamında mıyız? (tarayıcıda değil)
@@ -327,5 +327,63 @@ export async function fetchProgressFromSupabase(
     return { ...defaultProgress, ...(data.data as Partial<UserProgress>) };
   } catch {
     return null;
+  }
+}
+
+// ─── Öğretmen Notları ───────────────────────────────────────────────────────
+
+export async function fetchUnreadNotes(profileId: string): Promise<TeacherNote[]> {
+  try {
+    const { data, error } = await supabase
+      .from('teacher_notes')
+      .select('*')
+      .eq('profile_id', profileId)
+      .is('read_at', null)
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data.map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      teacherId: r.teacher_id as string,
+      classId: r.class_id as string,
+      profileId: r.profile_id as string,
+      studentName: r.student_name as string,
+      content: r.content as string,
+      createdAt: r.created_at as string,
+      readAt: r.read_at as string | null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function markNoteRead(noteId: string): Promise<void> {
+  try {
+    await supabase
+      .from('teacher_notes')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', noteId);
+  } catch {
+    // sessizce geç
+  }
+}
+
+export async function addTeacherNote(
+  teacherId: string,
+  classId: string,
+  profileId: string,
+  studentName: string,
+  content: string,
+): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('teacher_notes').insert({
+      teacher_id: teacherId,
+      class_id: classId,
+      profile_id: profileId,
+      student_name: studentName,
+      content: content.trim(),
+    });
+    return !error;
+  } catch {
+    return false;
   }
 }
