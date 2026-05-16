@@ -22,7 +22,7 @@ export function UpdateChecker() {
     const t = setTimeout(async () => {
       try {
         const u = await check();
-        if (u?.available) setUpdate(u);
+        if (u) setUpdate(u);
       } catch {
         // Offline veya endpoint hatası — sessizce geç
       }

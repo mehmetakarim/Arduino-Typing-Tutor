@@ -49,6 +49,7 @@ export default function App() {
         <div className="animate-fade-in">
           <ProfileSelect />
         </div>
+        <UpdateChecker />
       </div>
     );
   }
