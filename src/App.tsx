@@ -8,6 +8,7 @@ import { Certificate } from './components/Certificate';
 import { ProfileSelect } from './components/ProfileSelect';
 import { ParentPanel } from './components/ParentPanel';
 import { TeacherPanel } from './components/TeacherPanel';
+import { UpdateChecker } from './components/UpdateChecker';
 import lessonsData from './data/lessons.json';
 import { AppScreen, Lesson } from './types';
 
@@ -65,6 +66,7 @@ export default function App() {
         {screen === 'parent-panel' && <ParentPanel />}
         {screen === 'teacher-panel' && <TeacherPanel />}
       </ScreenWrapper>
+      <UpdateChecker />
     </div>
   );
 }
