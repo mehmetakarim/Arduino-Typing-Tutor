@@ -62,18 +62,42 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
-      # ── macOS: güncelleme manifesti ─────────────────────────────────────────
+      # ── macOS: imzala ve manifest oluştur ──────────────────────────────────
       - name: macOS güncelleme manifesti oluştur
         if: matrix.platform == 'macos-latest'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG="v${VERSION}"
           PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          SIG=$(cat "src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Arduino Typing Tutor.app.tar.gz.sig")
+
+          BUNDLE_DIR="src-tauri/target/aarch64-apple-darwin/release/bundle/macos"
+          TAR_GZ="${BUNDLE_DIR}/Arduino Typing Tutor.app.tar.gz"
+          SIG_FILE="${TAR_GZ}.sig"
+
+          # .app.tar.gz yoksa oluştur (genellikle tauri-action üretir)
+          if [ ! -f "$TAR_GZ" ]; then
+            echo "tar.gz bulunamadı, oluşturuluyor..."
+            tar -czf "$TAR_GZ" -C "$BUNDLE_DIR" "Arduino Typing Tutor.app"
+          fi
+
+          # Private key'i geçici dosyaya yaz (base64 decode)
+          echo "$TAURI_SIGNING_PRIVATE_KEY" | base64 -d > /tmp/tauri_key.key
+
+          # İmzala → .sig dosyası oluşur
+          npm run tauri -- signer sign \
+            --private-key-path /tmp/tauri_key.key \
+            --password "" \
+            "$TAR_GZ"
+
+          rm -f /tmp/tauri_key.key
+
+          SIG=$(cat "$SIG_FILE")
           URL="https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/${TAG}/Arduino.Typing.Tutor_aarch64.app.tar.gz"
+
           jq -n \
             --arg version "$VERSION" \
             --arg pub_date "$PUB_DATE" \
@@ -81,10 +105,11 @@ jobs:
             --arg url "$URL" \
             '{"version":$version,"pub_date":$pub_date,"notes":"","platforms":{"darwin-aarch64":{"signature":$sig,"url":$url}}}' \
             > latest-darwin-aarch64.json
+
           gh release upload "$TAG" latest-darwin-aarch64.json --clobber
           echo "macOS manifesti yüklendi: latest-darwin-aarch64.json"
 
-      # ── Windows: güncelleme manifesti ───────────────────────────────────────
+      # ── Windows: nsis.zip yükle ve manifest oluştur ────────────────────────
       - name: Windows güncelleme manifesti oluştur
         if: matrix.platform == 'windows-latest'
         shell: pwsh
@@ -94,15 +119,27 @@ jobs:
           $VERSION = node -p "require('./package.json').version"
           $TAG = "v$VERSION"
           $PUB_DATE = (Get-Date -AsUTC).ToString("yyyy-MM-ddTHH:mm:ssZ")
-          $NSIS_ZIP = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.nsis.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+
+          $NSIS_ZIP = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" `
+            -Filter "*.nsis.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+
           if (-not $NSIS_ZIP) {
-            Write-Host "NSIS zip bulunamadi, bundle dizini:"
+            Write-Host "NSIS zip bulunamadi. Bundle dizini:"
             Get-ChildItem -Path "src-tauri\target\release\bundle" -Recurse | Select-Object FullName
             exit 0
           }
-          $SIG = (Get-Content "$($NSIS_ZIP.FullName).sig" -Raw).Trim()
+
+          $SIG_PATH = "$($NSIS_ZIP.FullName).sig"
+          if (-not (Test-Path $SIG_PATH)) {
+            Write-Host "NSIS sig bulunamadi: $SIG_PATH"
+            exit 0
+          }
+
+          $SIG = (Get-Content $SIG_PATH -Raw).Trim()
           $URL = "https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/$TAG/$($NSIS_ZIP.Name)"
+
           gh release upload $TAG $NSIS_ZIP.FullName --clobber
+
           $json = [ordered]@{
             version  = $VERSION
             pub_date = $PUB_DATE
@@ -114,6 +151,10 @@ jobs:
               }
             }
           } | ConvertTo-Json -Depth 5
-          [System.IO.File]::WriteAllText("latest-windows-x86_64.json", $json, [System.Text.UTF8Encoding]::new($false))
+
+          [System.IO.File]::WriteAllText(
+            "latest-windows-x86_64.json", $json,
+            [System.Text.UTF8Encoding]::new($false)
+          )
           gh release upload $TAG "latest-windows-x86_64.json" --clobber
-          Write-Host "Windows manifesti yuklendi: latest-windows-x86_64.json"
+          Write-Host "Windows manifesti yuklendi."
