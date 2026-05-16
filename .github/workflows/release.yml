@@ -112,7 +112,7 @@ jobs:
           gh release upload "$TAG" latest-darwin-aarch64.json --clobber
           echo "macOS manifesti yüklendi: latest-darwin-aarch64.json"
 
-      # ── Windows: nsis.zip yükle ve manifest oluştur ────────────────────────
+      # ── Windows: nsis setup.exe yükle ve manifest oluştur ─────────────────
       - name: Windows güncelleme manifesti oluştur
         if: matrix.platform == 'windows-latest'
         shell: pwsh
@@ -123,25 +123,26 @@ jobs:
           $TAG = "v$VERSION"
           $PUB_DATE = (Get-Date -AsUTC).ToString("yyyy-MM-ddTHH:mm:ssZ")
 
-          $NSIS_ZIP = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" `
-            -Filter "*.nsis.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          # Tauri v2 artık .nsis.zip değil doğrudan *-setup.exe üretiyor
+          $NSIS_EXE = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" `
+            -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
 
-          if (-not $NSIS_ZIP) {
-            Write-Host "NSIS zip bulunamadi. Bundle dizini:"
+          if (-not $NSIS_EXE) {
+            Write-Host "NSIS exe bulunamadi. Bundle dizini:"
             Get-ChildItem -Path "src-tauri\target\release\bundle" -Recurse | Select-Object FullName
             exit 0
           }
 
-          $SIG_PATH = "$($NSIS_ZIP.FullName).sig"
+          $SIG_PATH = "$($NSIS_EXE.FullName).sig"
           if (-not (Test-Path $SIG_PATH)) {
             Write-Host "NSIS sig bulunamadi: $SIG_PATH"
             exit 0
           }
 
           $SIG = (Get-Content $SIG_PATH -Raw).Trim()
-          $URL = "https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/$TAG/$($NSIS_ZIP.Name)"
+          $URL = "https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/$TAG/$($NSIS_EXE.Name)"
 
-          gh release upload $TAG $NSIS_ZIP.FullName --clobber
+          gh release upload $TAG $NSIS_EXE.FullName --clobber
 
           $json = [ordered]@{
             version  = $VERSION
