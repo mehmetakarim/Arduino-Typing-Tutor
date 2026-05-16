@@ -118,6 +118,7 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
           $VERSION = node -p "require('./package.json').version"
           $TAG = "v$VERSION"
@@ -133,10 +134,21 @@ jobs:
             exit 0
           }
 
+          # tauri-action@v0 Tauri v2'de .sig üretmiyor — manuel imzala
+          $KEY_PATH = "$env:TEMP\tauri_key.key"
+          [System.IO.File]::WriteAllText($KEY_PATH, $Env:TAURI_SIGNING_PRIVATE_KEY,
+            [System.Text.UTF8Encoding]::new($false))
+          $Env:TAURI_SIGNING_PRIVATE_KEY = $null
+          npm run tauri -- signer sign `
+            --private-key-path $KEY_PATH `
+            --password "" `
+            $NSIS_EXE.FullName
+          Remove-Item $KEY_PATH -Force
+
           $SIG_PATH = "$($NSIS_EXE.FullName).sig"
           if (-not (Test-Path $SIG_PATH)) {
-            Write-Host "NSIS sig bulunamadi: $SIG_PATH"
-            exit 0
+            Write-Host "NSIS sig hala bulunamadi: $SIG_PATH"
+            exit 1
           }
 
           $SIG = (Get-Content $SIG_PATH -Raw).Trim()
