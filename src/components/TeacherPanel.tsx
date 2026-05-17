@@ -189,18 +189,18 @@ export function TeacherPanel() {
   async function removeStudent(student: StudentStat) {
     if (!selectedClass) return;
     setDeleting(true);
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from('class_members')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('class_id', selectedClass.id)
       .eq('profile_id', student.profileId);
     setDeleting(false);
     setDeleteTarget(null);
-    if (!error) {
+    if (!error && count && count > 0) {
       addToast(`🗑️ ${student.studentName} sınıftan çıkarıldı`);
       await loadStudents(selectedClass.id);
     } else {
-      addToast('❌ Silinemedi, tekrar dene');
+      addToast('❌ Silinemedi — yetki hatası olabilir');
     }
   }
 
