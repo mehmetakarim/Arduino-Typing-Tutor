@@ -5,6 +5,7 @@ interface KeyboardProps {
   activeKey?: string;
   lastKey?: string;
   wasCorrect?: boolean;
+  errorKeyMap?: Record<string, number>;
 }
 
 const FINGER_BG: Record<FingerName, string> = {
@@ -31,13 +32,14 @@ interface KeyDef {
 interface KeyProps {
   keyDef: KeyDef;
   isActive: boolean;
-  isShiftActive: boolean; // bu tuş shift + bir şey gerektiriyor
-  isAltActive: boolean;   // bu tuş AltGr + bir şey gerektiriyor
+  isShiftActive: boolean;
+  isAltActive: boolean;
   isPressed: boolean;
   wasCorrect: boolean;
+  errorIntensity?: number; // 0-1 arası, kırmızı overlay yoğunluğu
 }
 
-function Key({ keyDef, isActive, isShiftActive: _isShiftActive, isAltActive: _isAltActive, isPressed, wasCorrect }: KeyProps) {
+function Key({ keyDef, isActive, isShiftActive: _isShiftActive, isAltActive: _isAltActive, isPressed, wasCorrect, errorIntensity = 0 }: KeyProps) {
   const bgClass = FINGER_BG[keyDef.finger];
 
   let border = 'border-gray-300 dark:border-gray-600';
@@ -67,8 +69,16 @@ function Key({ keyDef, isActive, isShiftActive: _isShiftActive, isAltActive: _is
         ${scale} ${shadow}
         ${isActive ? 'animate-glow' : ''}
         opacity-90 hover:opacity-100
+        overflow-hidden
       `}
     >
+      {/* Hata ısı haritası overlay */}
+      {errorIntensity > 0 && !isActive && !isPressed && (
+        <div
+          className="absolute inset-0 rounded-sm pointer-events-none"
+          style={{ backgroundColor: `rgba(239,68,68,${errorIntensity * 0.65})` }}
+        />
+      )}
       {/* üst sağ: shift karakteri */}
       {keyDef.shiftKey && (
         <span className="absolute top-0.5 right-1 text-[9px] opacity-60">
@@ -126,8 +136,19 @@ function SpaceKey({ isActive, isPressed }: { isActive: boolean; isPressed: boole
   );
 }
 
-export function Keyboard({ activeKey, lastKey, wasCorrect = true }: KeyboardProps) {
+export function Keyboard({ activeKey, lastKey, wasCorrect = true, errorKeyMap = {} }: KeyboardProps) {
   const allKeys = layout.rows.flatMap(r => r.keys) as KeyDef[];
+
+  const maxErrors = Math.max(1, ...Object.values(errorKeyMap));
+
+  function getErrorIntensity(k: KeyDef): number {
+    const count = (errorKeyMap[k.key] ?? 0) +
+                  (errorKeyMap[k.key.toLowerCase()] ?? 0) +
+                  (k.shiftKey ? (errorKeyMap[k.shiftKey] ?? 0) : 0) +
+                  (k.altKey   ? (errorKeyMap[k.altKey]   ?? 0) : 0);
+    if (count === 0) return 0;
+    return Math.min(count / maxErrors, 1);
+  }
 
   // Shift gerekli mi? (activeKey bir shiftKey değeri ise)
   const isShiftNeeded = activeKey !== undefined &&
@@ -182,6 +203,7 @@ export function Keyboard({ activeKey, lastKey, wasCorrect = true }: KeyboardProp
             isAltActive={isAltNeeded}
             isPressed={keyIsPressed(k)}
             wasCorrect={wasCorrect}
+            errorIntensity={getErrorIntensity(k)}
           />
         ))}
       </div>
@@ -198,6 +220,7 @@ export function Keyboard({ activeKey, lastKey, wasCorrect = true }: KeyboardProp
             isAltActive={isAltNeeded}
             isPressed={keyIsPressed(k)}
             wasCorrect={wasCorrect}
+            errorIntensity={getErrorIntensity(k)}
           />
         ))}
       </div>
@@ -214,6 +237,7 @@ export function Keyboard({ activeKey, lastKey, wasCorrect = true }: KeyboardProp
             isAltActive={isAltNeeded}
             isPressed={keyIsPressed(k)}
             wasCorrect={wasCorrect}
+            errorIntensity={getErrorIntensity(k)}
           />
         ))}
         <div className="w-16 h-10 rounded-md bg-gray-700 flex items-center justify-center text-xs text-gray-400 font-semibold border-2 border-gray-600">
@@ -231,6 +255,7 @@ export function Keyboard({ activeKey, lastKey, wasCorrect = true }: KeyboardProp
             isAltActive={isAltNeeded}
             isPressed={keyIsPressed(k)}
             wasCorrect={wasCorrect}
+            errorIntensity={getErrorIntensity(k)}
           />
         ))}
         <ShiftKey isActive={useRightShift} label="SHIFT" />

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 
 interface StatsPanelProps {
   wpm: number;
@@ -13,15 +14,43 @@ function formatTime(s: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+function useAnimatedValue(target: number, duration = 350): number {
+  const [display, setDisplay] = useState(target);
+  const prev = useRef(target);
+
+  useEffect(() => {
+    const from = prev.current;
+    if (from === target) return;
+    const startTime = performance.now();
+    let raf: number;
+
+    function step(now: number) {
+      const t = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      setDisplay(Math.round(from + (target - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(step);
+      else prev.current = target;
+    }
+
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+
+  return display;
+}
+
 export function StatsPanel({ wpm, accuracy, elapsedSeconds, errors, progress }: StatsPanelProps) {
+  const animatedWpm = useAnimatedValue(wpm);
   const accuracyColor = accuracy >= 90 ? 'text-green-400' : accuracy >= 75 ? 'text-yellow-400' : 'text-red-400';
-  const wpmColor = wpm >= 30 ? 'text-green-400' : wpm >= 15 ? 'text-yellow-400' : 'text-blue-400';
+  const wpmColor = animatedWpm >= 30 ? 'text-green-400' : animatedWpm >= 15 ? 'text-yellow-400' : 'text-blue-400';
 
   return (
     <div className="bg-gray-800 dark:bg-gray-900 rounded-xl p-3 shadow-lg">
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex flex-col items-center min-w-[60px]">
-          <span className={`text-2xl font-bold ${wpmColor}`}>{wpm}</span>
+          <span className={`text-2xl font-bold tabular-nums transition-colors duration-300 ${wpmColor}`}>
+            {animatedWpm}
+          </span>
           <span className="text-xs text-gray-400">WPM</span>
         </div>
 

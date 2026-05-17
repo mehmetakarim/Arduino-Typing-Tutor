@@ -141,6 +141,7 @@ export function LessonView({ lesson }: LessonViewProps) {
           activeKey={activeChar}
           lastKey={typed[typed.length - 1]}
           wasCorrect={typed.length === 0 || typed[typed.length - 1] === lesson.content[typed.length - 1]}
+          errorKeyMap={errorKeyMap}
         />
       </div>
 
