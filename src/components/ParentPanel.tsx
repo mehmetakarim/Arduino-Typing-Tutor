@@ -11,6 +11,38 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 
+function getWeeklySummary(stats: UserProgress) {
+  const now = Date.now();
+  const DAY = 86400000;
+  const thisWeekStart = now - 7 * DAY;
+  const lastWeekStart = now - 14 * DAY;
+
+  const thisWeek = stats.lessonStats.filter(s => s.completedAt && new Date(s.completedAt).getTime() >= thisWeekStart);
+  const lastWeek = stats.lessonStats.filter(s => s.completedAt && new Date(s.completedAt).getTime() >= lastWeekStart && new Date(s.completedAt).getTime() < thisWeekStart);
+
+  const avgWpm = (arr: typeof thisWeek) =>
+    arr.length ? Math.round(arr.reduce((s, x) => s + x.bestWPM, 0) / arr.length) : 0;
+
+  const thisWpm = avgWpm(thisWeek);
+  const lastWpm = avgWpm(lastWeek);
+  const wpmDelta = lastWpm > 0 ? thisWpm - lastWpm : null;
+
+  // Haftanın 7 günü için günlük ders sayısı
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(thisWeekStart + i * DAY);
+    const label = d.toLocaleDateString('tr-TR', { weekday: 'short' });
+    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const dayEnd = dayStart + DAY;
+    const count = thisWeek.filter(s => {
+      const t = new Date(s.completedAt!).getTime();
+      return t >= dayStart && t < dayEnd;
+    }).length;
+    return { label, count };
+  });
+
+  return { thisWeek: thisWeek.length, lastWeek: lastWeek.length, thisWpm, lastWpm, wpmDelta, days };
+}
+
 type View = 'pin' | 'dashboard' | 'settings';
 
 export function ParentPanel() {
@@ -208,6 +240,82 @@ export function ParentPanel() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Haftalık Özet */}
+        {statsLoaded && profiles.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">📅 Bu Haftanın Özeti</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profiles.map(profile => {
+                const stats = profileStats[profile.id];
+                if (!stats) return null;
+                const w = getWeeklySummary(stats);
+                const hasActivity = w.thisWeek > 0;
+
+                return (
+                  <div key={profile.id} className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
+                    {/* Profil başlığı */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ backgroundColor: profile.color }}>
+                        {profile.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-white font-medium">{profile.name}</span>
+                    </div>
+
+                    {!hasActivity ? (
+                      <p className="text-gray-600 text-sm text-center py-3">Bu hafta henüz ders yapılmadı</p>
+                    ) : (
+                      <>
+                        {/* Özet sayılar */}
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                          <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: '#0D0D0E' }}>
+                            <p className="text-white font-bold text-xl">{w.thisWeek}</p>
+                            <p className="text-gray-500 text-xs">ders</p>
+                          </div>
+                          <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: '#0D0D0E' }}>
+                            <p className="text-white font-bold text-xl">{w.thisWpm}</p>
+                            <p className="text-gray-500 text-xs">ort. WPM</p>
+                          </div>
+                          <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: '#0D0D0E' }}>
+                            {w.wpmDelta !== null ? (
+                              <>
+                                <p className={`font-bold text-xl ${w.wpmDelta > 0 ? 'text-green-400' : w.wpmDelta < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                                  {w.wpmDelta > 0 ? '+' : ''}{w.wpmDelta}
+                                </p>
+                                <p className="text-gray-500 text-xs">WPM farkı</p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-gray-500 font-bold text-xl">—</p>
+                                <p className="text-gray-600 text-xs">önceki hafta yok</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Günlük aktivite mini bar */}
+                        <ResponsiveContainer width="100%" height={60}>
+                          <BarChart data={w.days} barSize={14}>
+                            <XAxis dataKey="label" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <Tooltip
+                              contentStyle={{ backgroundColor: '#242425', border: '1px solid #2E2E2F', borderRadius: 8, fontSize: 12 }}
+                              formatter={(v) => [`${v} ders`, '']}
+                            />
+                            <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                              {w.days.map((d, i) => (
+                                <Cell key={i} fill={d.count > 0 ? profile.color : '#2E2E2F'} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
