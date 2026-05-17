@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useNotesStore } from '../store/notesStore';
 import { TeacherNote } from '../types';
 
@@ -28,8 +29,8 @@ export function TeacherNotesModal({ onClose }: Props) {
     onClose();
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  return createPortal(
+    <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-black/60 backdrop-blur-sm">
       <div
         className="w-full max-w-lg rounded-2xl border border-white/10 shadow-2xl flex flex-col max-h-[80vh]"
         style={{ backgroundColor: '#1A1A1B' }}
@@ -80,6 +81,7 @@ export function TeacherNotesModal({ onClose }: Props) {
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
