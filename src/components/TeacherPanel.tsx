@@ -106,6 +106,8 @@ export function TeacherPanel() {
   const [noteTarget, setNoteTarget] = useState<StudentStat | null>(null);
   const [noteContent, setNoteContent] = useState('');
   const [noteSending, setNoteSending] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<StudentStat | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const toastId = useRef(0);
   const prevStudents = useRef<StudentStat[]>([]);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -182,6 +184,24 @@ export function TeacherPanel() {
       .select().single();
     setLoading(false);
     if (!error && data) { setNewClassName(''); setClasses(prev => [...prev, data]); }
+  }
+
+  async function removeStudent(student: StudentStat) {
+    if (!selectedClass) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from('class_members')
+      .delete()
+      .eq('class_id', selectedClass.id)
+      .eq('profile_id', student.profileId);
+    setDeleting(false);
+    setDeleteTarget(null);
+    if (!error) {
+      addToast(`🗑️ ${student.studentName} sınıftan çıkarıldı`);
+      await loadStudents(selectedClass.id);
+    } else {
+      addToast('❌ Silinemedi, tekrar dene');
+    }
   }
 
   function copyCode(code: string) {
@@ -353,19 +373,55 @@ export function TeacherPanel() {
                         <td className="px-5 py-3 text-right text-gray-400">{s.badgeCount > 0 ? `🏅 ${s.badgeCount}` : '—'}</td>
                         <td className="px-5 py-3 text-right text-gray-600 text-xs">{timeAgo(s.updatedAt)}</td>
                         <td className="px-5 py-3 text-center">
-                          <button
-                            onClick={() => { setNoteTarget(s); setNoteContent(''); }}
-                            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
-                            title="Not bırak"
-                          >
-                            📝
-                          </button>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => { setNoteTarget(s); setNoteContent(''); setDeleteTarget(null); }}
+                              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
+                              title="Not bırak"
+                            >
+                              📝
+                            </button>
+                            <button
+                              onClick={() => { setDeleteTarget(s); setNoteTarget(null); }}
+                              className="text-xs text-red-500 hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
+                              title="Sınıftan çıkar"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* Öğrenci silme onay kutusu */}
+              {deleteTarget && (
+                <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
+                  <p className="text-red-300 text-sm font-semibold mb-1">
+                    🗑️ {deleteTarget.studentName} sınıftan çıkarılsın mı?
+                  </p>
+                  <p className="text-gray-500 text-xs mb-3">
+                    Bu işlem öğrencinin sınıf üyeliğini kaldırır. İlerleme verileri silinmez.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => setDeleteTarget(null)}
+                      className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      disabled={deleting}
+                      onClick={() => removeStudent(deleteTarget)}
+                      className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white transition-colors"
+                    >
+                      {deleting ? 'Siliniyor…' : 'Evet, çıkar'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Not yazma modalı */}
               {noteTarget && (
