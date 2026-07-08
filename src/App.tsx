@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useProgressStore } from './store/progressStore';
 import { useProfileStore } from './store/profileStore';
+import { useAuthStore } from './store/authStore';
 import { MainMenu } from './components/MainMenu';
 import { LessonView } from './components/LessonView';
 import { ResultScreen } from './components/ResultScreen';
@@ -9,6 +10,7 @@ import { ProfileSelect } from './components/ProfileSelect';
 import { ParentPanel } from './components/ParentPanel';
 import { TeacherPanel } from './components/TeacherPanel';
 import { UpdateChecker } from './components/UpdateChecker';
+import { AuthScreen } from './components/AuthScreen';
 import lessonsData from './data/lessons.json';
 import { AppScreen, Lesson } from './types';
 
@@ -38,6 +40,22 @@ function ScreenWrapper({ screen, children }: { screen: AppScreen; children: Reac
 export default function App() {
   const { screen, activeLessonId } = useProgressStore();
   const { activeProfile } = useProfileStore();
+  const { pendingReset, handleResetDeepLink, clearPendingReset } = useAuthStore();
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    import('@tauri-apps/plugin-deep-link').then(({ onOpenUrl }) => {
+      onOpenUrl((urls) => {
+        for (const url of urls) {
+          if (url.includes('arduinotypingtutor://')) {
+            handleResetDeepLink(url);
+            break;
+          }
+        }
+      }).then(fn => { unlisten = fn; });
+    });
+    return () => unlisten?.();
+  }, []);
 
   const activeLesson = activeLessonId
     ? (lessonsData.find(l => l.id === activeLessonId) as Lesson | undefined)
@@ -50,6 +68,9 @@ export default function App() {
           <ProfileSelect />
         </div>
         <UpdateChecker />
+        {pendingReset && (
+          <AuthScreen onClose={clearPendingReset} initialMode="set-password" />
+        )}
       </div>
     );
   }
@@ -68,6 +89,9 @@ export default function App() {
         {screen === 'teacher-panel' && <TeacherPanel />}
       </ScreenWrapper>
       <UpdateChecker />
+      {pendingReset && (
+        <AuthScreen onClose={clearPendingReset} initialMode="set-password" />
+      )}
     </div>
   );
 }

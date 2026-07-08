@@ -5,6 +5,7 @@ interface AuthState {
   user: SupabaseUser | null;
   loading: boolean;
   error: string | null;
+  pendingReset: boolean;
 
   signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
@@ -12,12 +13,16 @@ interface AuthState {
   loadSession: () => Promise<void>;
   clearError: () => void;
   resetPassword: (email: string) => Promise<boolean>;
+  handleResetDeepLink: (url: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
+  clearPendingReset: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: false,
   error: null,
+  pendingReset: false,
 
   loadSession: async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -104,11 +109,43 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+  clearPendingReset: () => set({ pendingReset: false, error: null }),
+
+  handleResetDeepLink: async (url: string) => {
+    try {
+      const hash = url.includes('#') ? url.split('#')[1] : url.split('?')[1] ?? '';
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const type = params.get('type');
+      if (type !== 'recovery' || !accessToken || !refreshToken) return;
+      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      set({ pendingReset: true, error: null });
+    } catch {
+      // URL parse hatası — yok say
+    }
+  },
+
+  updatePassword: async (newPassword: string) => {
+    set({ loading: true, error: null });
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      set({ loading: false });
+      if (error) { set({ error: 'Şifre güncellenemedi.' }); return false; }
+      set({ pendingReset: false });
+      return true;
+    } catch {
+      set({ error: 'Bağlantı hatası.', loading: false });
+      return false;
+    }
+  },
 
   resetPassword: async (email: string) => {
     set({ loading: true, error: null });
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'arduinotypingtutor://reset-password',
+      });
       set({ loading: false });
       if (error) { set({ error: 'E-posta gönderilemedi. Adresi kontrol et.' }); return false; }
       return true;

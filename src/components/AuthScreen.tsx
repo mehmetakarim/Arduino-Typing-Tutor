@@ -3,15 +3,16 @@ import { useAuthStore } from '../store/authStore';
 import { UserRole } from '../lib/supabase';
 import { Spinner } from './Spinner';
 
-type Mode = 'login' | 'register' | 'forgot';
+type Mode = 'login' | 'register' | 'forgot' | 'set-password';
 
 interface AuthScreenProps {
   onClose: () => void;
+  initialMode?: Mode;
 }
 
-export function AuthScreen({ onClose }: AuthScreenProps) {
-  const { signIn, signUp, resetPassword, loading, error, clearError } = useAuthStore();
-  const [mode, setMode] = useState<Mode>('login');
+export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) {
+  const { signIn, signUp, resetPassword, updatePassword, loading, error, clearError } = useAuthStore();
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [role, setRole] = useState<UserRole>('parent');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,9 +36,15 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
         setSuccess('Kayıt başarılı! Giriş yapılıyor...');
         setTimeout(onClose, 1200);
       }
-    } else {
+    } else if (mode === 'forgot') {
       const ok = await resetPassword(email);
       if (ok) setSuccess('Şifre sıfırlama bağlantısı e-posta adresine gönderildi.');
+    } else {
+      const ok = await updatePassword(password);
+      if (ok) {
+        setSuccess('Şifreniz güncellendi! Giriş yapılıyor...');
+        setTimeout(onClose, 1500);
+      }
     }
   }
 
@@ -50,7 +57,7 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
         {/* Başlık */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-white text-xl font-bold">
-            {mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : 'Şifremi Unuttum'}
+            {mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : mode === 'forgot' ? 'Şifremi Unuttum' : 'Şifremi Değiştir'}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white text-lg transition-colors">✕</button>
         </div>
@@ -105,7 +112,7 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
             <>
               <input
                 type="password"
-                placeholder="Şifre"
+                placeholder={mode === 'set-password' ? 'Yeni Şifre (en az 6 karakter)' : 'Şifre'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -145,13 +152,13 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
               <span className="flex items-center justify-center gap-2">
                 <Spinner size={16} /> Lütfen bekle...
               </span>
-            ) : mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : 'Sıfırlama Bağlantısı Gönder'}
+            ) : mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : mode === 'forgot' ? 'Sıfırlama Bağlantısı Gönder' : 'Şifremi Güncelle'}
           </button>
         </form>
 
         {/* Mod değiştir */}
         <p className="text-center text-gray-500 text-xs mt-5">
-          {mode === 'forgot' ? (
+          {mode === 'forgot' || mode === 'set-password' ? (
             <button onClick={() => switchMode('login')} className="text-indigo-400 hover:text-indigo-300 transition-colors">
               ← Giriş ekranına dön
             </button>

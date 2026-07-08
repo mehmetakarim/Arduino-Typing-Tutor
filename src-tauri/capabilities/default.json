@@ -13,6 +13,7 @@
     "fs:allow-download-write-recursive",
     "opener:allow-open-path",
     "updater:default",
-    "process:default"
+    "process:default",
+    "deep-link:default"
   ]
 }
