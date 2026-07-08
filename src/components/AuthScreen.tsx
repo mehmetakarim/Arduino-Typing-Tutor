@@ -3,14 +3,14 @@ import { useAuthStore } from '../store/authStore';
 import { UserRole } from '../lib/supabase';
 import { Spinner } from './Spinner';
 
-type Mode = 'login' | 'register';
+type Mode = 'login' | 'register' | 'forgot';
 
 interface AuthScreenProps {
   onClose: () => void;
 }
 
 export function AuthScreen({ onClose }: AuthScreenProps) {
-  const { signIn, signUp, loading, error, clearError } = useAuthStore();
+  const { signIn, signUp, resetPassword, loading, error, clearError } = useAuthStore();
   const [mode, setMode] = useState<Mode>('login');
   const [role, setRole] = useState<UserRole>('parent');
   const [email, setEmail] = useState('');
@@ -29,12 +29,15 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
     if (mode === 'login') {
       const ok = await signIn(email, password);
       if (ok) onClose();
-    } else {
+    } else if (mode === 'register') {
       const ok = await signUp(email, password, fullName, role);
       if (ok) {
         setSuccess('Kayıt başarılı! Giriş yapılıyor...');
         setTimeout(onClose, 1200);
       }
+    } else {
+      const ok = await resetPassword(email);
+      if (ok) setSuccess('Şifre sıfırlama bağlantısı e-posta adresine gönderildi.');
     }
   }
 
@@ -47,7 +50,7 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
         {/* Başlık */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-white text-xl font-bold">
-            {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
+            {mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : 'Şifremi Unuttum'}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white text-lg transition-colors">✕</button>
         </div>
@@ -98,15 +101,28 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
             className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm"
           />
 
-          <input
-            type="password"
-            placeholder="Şifre"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm"
-          />
+          {mode !== 'forgot' && (
+            <>
+              <input
+                type="password"
+                placeholder="Şifre"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm"
+              />
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => switchMode('forgot')}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 text-right transition-colors -mt-2"
+                >
+                  Şifremi unuttum
+                </button>
+              )}
+            </>
+          )}
 
           {error && (
             <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -129,20 +145,28 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
               <span className="flex items-center justify-center gap-2">
                 <Spinner size={16} /> Lütfen bekle...
               </span>
-            ) : mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
+            ) : mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : 'Sıfırlama Bağlantısı Gönder'}
           </button>
         </form>
 
         {/* Mod değiştir */}
         <p className="text-center text-gray-500 text-xs mt-5">
-          {mode === 'login' ? 'Hesabın yok mu?' : 'Zaten hesabın var mı?'}
-          {' '}
-          <button
-            onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-            className="text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            {mode === 'login' ? 'Kayıt ol' : 'Giriş yap'}
-          </button>
+          {mode === 'forgot' ? (
+            <button onClick={() => switchMode('login')} className="text-indigo-400 hover:text-indigo-300 transition-colors">
+              ← Giriş ekranına dön
+            </button>
+          ) : (
+            <>
+              {mode === 'login' ? 'Hesabın yok mu?' : 'Zaten hesabın var mı?'}
+              {' '}
+              <button
+                onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+                className="text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                {mode === 'login' ? 'Kayıt ol' : 'Giriş yap'}
+              </button>
+            </>
+          )}
         </p>
       </div>
     </div>

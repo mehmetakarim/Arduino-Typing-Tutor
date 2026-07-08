@@ -11,6 +11,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   loadSession: () => Promise<void>;
   clearError: () => void;
+  resetPassword: (email: string) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -103,4 +104,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  resetPassword: async (email: string) => {
+    set({ loading: true, error: null });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      set({ loading: false });
+      if (error) { set({ error: 'E-posta gönderilemedi. Adresi kontrol et.' }); return false; }
+      return true;
+    } catch {
+      set({ error: 'Bağlantı hatası.', loading: false });
+      return false;
+    }
+  },
 }));
