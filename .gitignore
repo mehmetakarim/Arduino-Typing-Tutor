@@ -33,3 +33,6 @@ src-tauri/target/
 .env
 .env.local
 .env*.local
+
+# Claude Design handoff — geçici tasarım klasörü
+design/
