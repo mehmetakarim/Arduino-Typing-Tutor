@@ -64,15 +64,15 @@ export function StatsChart({ lessonStats, errorKeys }: StatsChartProps) {
 
   if (trendData.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8 text-sm">
+      <div className="text-center text-subtle py-8 text-sm">
         Henüz yeterli veri yok — ders tamamladıkça grafikler burada görünecek.
       </div>
     );
   }
 
   const tooltipStyle = {
-    contentStyle: { backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' },
-    labelStyle: { color: '#F9FAFB', fontSize: 12 },
+    contentStyle: { backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--bg-border)', borderRadius: '10px', fontFamily: 'Nunito, sans-serif' },
+    labelStyle: { color: 'var(--text-primary)', fontSize: 12 },
     itemStyle: { fontSize: 12 },
   };
 
@@ -81,28 +81,28 @@ export function StatsChart({ lessonStats, errorKeys }: StatsChartProps) {
       {/* WPM zaman serisi + kayan ortalama */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+          <h3 className="text-xs font-black text-subtle uppercase tracking-[1.5px]">
             WPM Gelişimi (Zaman Serisi)
           </h3>
-          <span className="text-xs text-gray-500">Ort. {avgWpm} WPM</span>
+          <span className="text-xs font-bold text-subtle">Ort. {avgWpm} WPM</span>
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 10 }} interval="preserveStartEnd" />
-            <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-border)" />
+            <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} interval="preserveStartEnd" />
+            <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
             <Tooltip {...tooltipStyle} labelFormatter={(_, payload) => payload?.[0]?.payload?.label ?? ''} />
-            <Legend wrapperStyle={{ color: '#9CA3AF', fontSize: 12 }} />
-            <ReferenceLine y={avgWpm} stroke="#6B7280" strokeDasharray="4 4" />
+            <Legend wrapperStyle={{ color: 'var(--text-secondary)', fontSize: 12 }} />
+            <ReferenceLine y={avgWpm} stroke="var(--text-muted)" strokeDasharray="4 4" />
             <Line
               type="monotone" dataKey="WPM"
-              stroke="#60A5FA" strokeWidth={2}
-              dot={{ fill: '#60A5FA', r: 3 }}
+              stroke="#22D3EE" strokeWidth={2}
+              dot={{ fill: '#22D3EE', r: 3 }}
               activeDot={{ r: 5 }}
             />
             <Line
               type="monotone" dataKey="Ortalama"
-              stroke="#F59E0B" strokeWidth={2} strokeDasharray="5 3"
+              stroke="#FBBF24" strokeWidth={2} strokeDasharray="5 3"
               dot={false}
             />
           </LineChart>
@@ -111,20 +111,20 @@ export function StatsChart({ lessonStats, errorKeys }: StatsChartProps) {
 
       {/* Doğruluk zaman serisi */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">
+        <h3 className="text-xs font-black text-subtle mb-3 uppercase tracking-[1.5px]">
           Doğruluk Gelişimi
         </h3>
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 10 }} interval="preserveStartEnd" />
-            <YAxis domain={[0, 100]} tick={{ fill: '#9CA3AF', fontSize: 11 }} unit="%" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-border)" />
+            <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} interval="preserveStartEnd" />
+            <YAxis domain={[0, 100]} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} unit="%" />
             <Tooltip {...tooltipStyle} />
-            <ReferenceLine y={90} stroke="#34D399" strokeDasharray="4 4" label={{ value: '%90', fill: '#34D39988', fontSize: 10 }} />
+            <ReferenceLine y={90} stroke="#A3E635" strokeDasharray="4 4" label={{ value: '%90', fill: '#A3E63588', fontSize: 10 }} />
             <Line
               type="monotone" dataKey="Doğruluk"
-              stroke="#34D399" strokeWidth={2}
-              dot={{ fill: '#34D399', r: 3 }}
+              stroke="#A3E635" strokeWidth={2}
+              dot={{ fill: '#A3E635', r: 3 }}
               activeDot={{ r: 5 }}
             />
           </LineChart>
@@ -134,16 +134,16 @@ export function StatsChart({ lessonStats, errorKeys }: StatsChartProps) {
       {/* Günlük aktivite */}
       {dailyData.length > 1 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">
+          <h3 className="text-xs font-black text-subtle mb-3 uppercase tracking-[1.5px]">
             Günlük Ders Aktivitesi
           </h3>
           <ResponsiveContainer width="100%" height={130}>
             <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="day" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
-              <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-border)" />
+              <XAxis dataKey="day" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
+              <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} allowDecimals={false} />
               <Tooltip {...tooltipStyle} />
-              <Bar dataKey="Ders" fill="#818CF8" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Ders" fill="#0E7490" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -152,16 +152,16 @@ export function StatsChart({ lessonStats, errorKeys }: StatsChartProps) {
       {/* En çok hata yapılan tuşlar */}
       {topErrors.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">
+          <h3 className="text-xs font-black text-subtle mb-3 uppercase tracking-[1.5px]">
             En Çok Hata Yapılan Tuşlar
           </h3>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={topErrors}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="key" tick={{ fill: '#9CA3AF', fontSize: 13, fontFamily: 'monospace' }} />
-              <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-border)" />
+              <XAxis dataKey="key" tick={{ fill: 'var(--text-secondary)', fontSize: 13, fontFamily: 'monospace' }} />
+              <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} allowDecimals={false} />
               <Tooltip {...tooltipStyle} />
-              <Bar dataKey="Hata" fill="#F87171" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Hata" fill="#FB7185" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -63,7 +63,7 @@ export default function App() {
 
   if (!activeProfile && screen !== 'parent-panel' && screen !== 'teacher-panel') {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-base text-primary">
         <div className="animate-fade-in">
           <ProfileSelect />
         </div>
@@ -76,7 +76,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-base text-primary">
       <ScreenWrapper screen={screen}>
         {screen === 'profile-select' && <ProfileSelect />}
         {screen === 'menu' && <MainMenu />}
