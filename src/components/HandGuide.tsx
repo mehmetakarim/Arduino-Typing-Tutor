@@ -9,85 +9,88 @@ interface FingerSegment {
   finger: FingerName;
   x: number;
   y: number;
-  width: number;
   height: number;
-  rx: number;
-  label: string;
 }
 
+/* 200×126 viewBox — tasarım prototipiyle aynı geometri */
+const FINGER_W = 26;
+const FINGER_RX = 13;
+
 const LEFT_FINGERS: FingerSegment[] = [
-  { finger: 'leftPinky',  x: 10,  y: 20, width: 22, height: 90, rx: 10, label: 'S' },
-  { finger: 'leftRing',   x: 38,  y: 10, width: 22, height: 100, rx: 10, label: 'Y' },
-  { finger: 'leftMiddle', x: 66,  y: 5,  width: 22, height: 105, rx: 10, label: 'O' },
-  { finger: 'leftIndex',  x: 94,  y: 12, width: 22, height: 98, rx: 10, label: 'İ' },
-  { finger: 'leftThumb',  x: 118, y: 100, width: 28, height: 22, rx: 10, label: 'B' },
+  { finger: 'leftPinky',  x: 38,  y: 14, height: 62 },
+  { finger: 'leftRing',   x: 70,  y: 4,  height: 72 },
+  { finger: 'leftMiddle', x: 102, y: 0,  height: 76 },
+  { finger: 'leftIndex',  x: 134, y: 8,  height: 68 },
 ];
 
 const RIGHT_FINGERS: FingerSegment[] = [
-  { finger: 'rightThumb',  x: 14,  y: 100, width: 28, height: 22, rx: 10, label: 'B' },
-  { finger: 'rightIndex',  x: 44,  y: 12, width: 22, height: 98, rx: 10, label: 'İ' },
-  { finger: 'rightMiddle', x: 72,  y: 5,  width: 22, height: 105, rx: 10, label: 'O' },
-  { finger: 'rightRing',   x: 100, y: 10, width: 22, height: 100, rx: 10, label: 'Y' },
-  { finger: 'rightPinky',  x: 128, y: 20, width: 22, height: 90, rx: 10, label: 'S' },
+  { finger: 'rightIndex',  x: 40,  y: 8,  height: 68 },
+  { finger: 'rightMiddle', x: 72,  y: 0,  height: 76 },
+  { finger: 'rightRing',   x: 104, y: 4,  height: 72 },
+  { finger: 'rightPinky',  x: 136, y: 14, height: 62 },
 ];
 
-function Hand({ fingers, activeFinger, shiftFinger }: {
-  fingers: FingerSegment[];
+function Hand({ side, activeFinger, shiftFinger }: {
+  side: 'left' | 'right';
   activeFinger?: FingerName;
   shiftFinger?: FingerName;
 }) {
-  return (
-    <svg width="160" height="140" viewBox="0 0 160 140" className="drop-shadow-md">
-      {/* Palm */}
-      <rect x="10" y="108" width="140" height="25" rx="8" fill="#374151" />
+  const fingers = side === 'left' ? LEFT_FINGERS : RIGHT_FINGERS;
+  const thumb: FingerName = side === 'left' ? 'leftThumb' : 'rightThumb';
+  const thumbActive = activeFinger === thumb;
+  // Başparmak: avucun iç tarafına doğru eğik küçük segment
+  const thumbProps = side === 'left'
+    ? { x: 164, y: 72, rotate: 'rotate(28 179 84)' }
+    : { x: 6, y: 72, rotate: 'rotate(-28 21 84)' };
 
-      {fingers.map((seg) => {
+  return (
+    <svg width="190" height="118" viewBox="0 0 200 126" fill="none" className="overflow-visible">
+      {/* Avuç */}
+      <rect x="30" y="62" width="140" height="52" rx="24" fill="var(--bg-elevated)" stroke="var(--bg-border)" strokeWidth="2" />
+
+      {/* Başparmak */}
+      <rect
+        x={thumbProps.x} y={thumbProps.y} width="30" height="24" rx="12"
+        fill={FINGER_COLORS[thumb]}
+        opacity={thumbActive ? 1 : 0.45}
+        transform={thumbProps.rotate}
+        className={thumbActive ? 'animate-wiggle' : ''}
+        style={thumbActive ? { filter: `drop-shadow(0 0 6px ${FINGER_COLORS[thumb]})` } : undefined}
+      />
+
+      {fingers.map(seg => {
+        const color = FINGER_COLORS[seg.finger];
         const isActive = activeFinger === seg.finger;
-        const isShift = shiftFinger === seg.finger;
-        const color = isShift && !isActive ? '#EAB308' : FINGER_COLORS[seg.finger];
+        const isShift = shiftFinger === seg.finger && !isActive;
+        const cx = seg.x + FINGER_W / 2;
 
         return (
-          <g key={seg.finger}>
+          <g key={seg.finger} className={isActive ? 'animate-wiggle' : isShift ? 'animate-pulse' : ''}>
             <rect
-              x={seg.x}
-              y={seg.y}
-              width={seg.width}
-              height={seg.height}
-              rx={seg.rx}
+              x={seg.x} y={seg.y} width={FINGER_W} height={seg.height} rx={FINGER_RX}
               fill={color}
-              opacity={isActive || isShift ? 1 : 0.4}
-              className={isActive ? 'animate-wiggle' : isShift ? 'animate-pulse' : ''}
+              opacity={isActive || isShift ? 1 : 0.45}
+              stroke={isShift ? '#FACC15' : undefined}
+              strokeWidth={isShift ? 3 : undefined}
               style={{
                 filter: isActive
                   ? `drop-shadow(0 0 6px ${color})`
                   : isShift
-                  ? `drop-shadow(0 0 8px #EAB308)`
-                  : undefined,
-                transition: 'opacity 0.2s, filter 0.2s',
+                    ? 'drop-shadow(0 0 8px #FACC15)'
+                    : undefined,
+                transition: 'opacity .2s, filter .2s',
               }}
             />
+            {/* Eklem noktası */}
+            <circle cx={cx} cy={seg.y + 13} r="5" fill="var(--bg-base)" opacity={isActive || isShift ? 0.35 : 0.25} />
             {isActive && (
-              <text
-                x={seg.x + seg.width / 2}
-                y={seg.y + seg.height / 2 + 4}
-                textAnchor="middle"
-                fill="white"
-                fontSize="10"
-                fontWeight="bold"
-              >
+              <text x={cx} y={seg.y - 4} textAnchor="middle" fontSize="15" fontWeight="900" fill={color} fontFamily="Nunito, sans-serif">
                 ↓
               </text>
             )}
-            {isShift && !isActive && (
-              <text
-                x={seg.x + seg.width / 2}
-                y={seg.y + seg.height / 2 + 4}
-                textAnchor="middle"
-                fill="white"
-                fontSize="11"
-                fontWeight="bold"
-              >
-                ⇧
+            {isShift && (
+              <text x={cx} y={seg.y - 4} textAnchor="middle" fontSize="11" fontWeight="900" fill="#FACC15" fontFamily="Nunito, sans-serif">
+                SHIFT
               </text>
             )}
           </g>
@@ -107,53 +110,52 @@ export function HandGuide({ activeFinger, isShiftRequired = false }: HandGuidePr
     ? (isRightHand ? 'leftPinky' : 'rightPinky')
     : undefined;
 
+  const activeColor = activeFinger ? FINGER_COLORS[activeFinger] : undefined;
+
   return (
-    <div className="flex items-center justify-center gap-8 py-2">
+    <div className="flex items-center justify-center gap-10 py-1">
       {/* Sol El */}
-      <div className="flex flex-col items-center">
-        <span className="text-xs text-gray-500 mb-1 font-semibold">SOL EL</span>
+      <div className="text-center">
         <div className={`transition-transform duration-200 ${isLeftHand ? 'scale-110' : ''}`}>
-          <Hand
-            fingers={LEFT_FINGERS}
-            activeFinger={activeFinger}
-            shiftFinger={shiftFinger}
-          />
+          <Hand side="left" activeFinger={activeFinger} shiftFinger={shiftFinger} />
         </div>
+        <div className="text-[11px] font-black tracking-[1.5px] uppercase text-subtle">Sol El</div>
       </div>
 
       {/* Orta gösterge */}
-      {activeFinger && (
-        <div className="flex flex-col items-center px-4 gap-2">
+      {activeFinger && activeColor && (
+        <div className="flex flex-col items-center gap-1.5 px-2">
           {isShiftRequired && (
-            <div className="flex flex-col items-center gap-1">
-              <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg px-3 py-1 text-xs text-yellow-300 font-bold animate-pulse">
-                ⇧ SHIFT basılı tut
-              </div>
-              <div className="text-yellow-400 text-sm font-bold">+</div>
+            <div
+              className="rounded-lg px-3 py-1 text-xs font-extrabold animate-pulse"
+              style={{ background: 'rgba(250,204,21,.14)', border: '1px solid #FACC15', color: '#FACC15' }}
+            >
+              ⇧ SHIFT basılı tut
             </div>
           )}
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
-            style={{ backgroundColor: FINGER_COLORS[activeFinger] }}
+            className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-xl font-black"
+            style={{
+              background: `color-mix(in srgb, ${activeColor} 14%, transparent)`,
+              border: `2px solid ${activeColor}`,
+              color: activeColor,
+              boxShadow: `0 0 18px ${activeColor}59`,
+            }}
           >
             {activeFinger.startsWith('left') ? '←' : '→'}
           </div>
-          <span className="text-xs text-gray-400">
-            {isShiftRequired ? 'bu tuşa bas' : 'aktif parmak'}
+          <span className="text-xs font-extrabold text-secondary">
+            {isShiftRequired ? 'bu parmakla bas' : 'aktif parmak'}
           </span>
         </div>
       )}
 
       {/* Sağ El */}
-      <div className="flex flex-col items-center">
-        <span className="text-xs text-gray-500 mb-1 font-semibold">SAĞ EL</span>
+      <div className="text-center">
         <div className={`transition-transform duration-200 ${isRightHand ? 'scale-110' : ''}`}>
-          <Hand
-            fingers={RIGHT_FINGERS}
-            activeFinger={activeFinger}
-            shiftFinger={shiftFinger}
-          />
+          <Hand side="right" activeFinger={activeFinger} shiftFinger={shiftFinger} />
         </div>
+        <div className="text-[11px] font-black tracking-[1.5px] uppercase text-subtle">Sağ El</div>
       </div>
     </div>
   );

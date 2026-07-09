@@ -39,54 +39,46 @@ function useAnimatedValue(target: number, duration = 350): number {
   return display;
 }
 
+function Stat({ value, label, color }: { value: string | number; label: string; color: string }) {
+  return (
+    <div className="flex items-baseline gap-[7px]">
+      <span className="text-2xl font-black tabular-nums transition-colors duration-300" style={{ color }}>
+        {value}
+      </span>
+      <span className="text-xs font-extrabold uppercase tracking-wider text-subtle">{label}</span>
+    </div>
+  );
+}
+
 export function StatsPanel({ wpm, accuracy, elapsedSeconds, errors, progress }: StatsPanelProps) {
   const animatedWpm = useAnimatedValue(wpm);
-  const accuracyColor = accuracy >= 90 ? 'text-green-400' : accuracy >= 75 ? 'text-yellow-400' : 'text-red-400';
-  const wpmColor = animatedWpm >= 30 ? 'text-green-400' : animatedWpm >= 15 ? 'text-yellow-400' : 'text-blue-400';
+  const accuracyColor = accuracy >= 90 ? 'var(--accent-lime)' : accuracy >= 75 ? 'var(--accent-amber)' : 'var(--accent-red)';
+  const wpmColor = animatedWpm >= 30 ? 'var(--accent-lime)' : animatedWpm >= 15 ? 'var(--accent-amber)' : 'var(--accent-cyan)';
 
   return (
-    <div className="bg-gray-800 dark:bg-gray-900 rounded-xl p-3 shadow-lg">
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex flex-col items-center min-w-[60px]">
-          <span className={`text-2xl font-bold tabular-nums transition-colors duration-300 ${wpmColor}`}>
-            {animatedWpm}
-          </span>
-          <span className="text-xs text-gray-400">WPM</span>
+    <div className="bg-surface border border-border rounded-panel px-5 py-2.5 flex items-center gap-[22px] flex-wrap">
+      <Stat value={animatedWpm} label="WPM" color={wpmColor} />
+      <div className="w-px h-6 bg-border" />
+      <Stat value={`%${accuracy}`} label="Doğruluk" color={accuracyColor} />
+      <div className="w-px h-6 bg-border" />
+      <Stat value={formatTime(elapsedSeconds)} label="Süre" color="var(--accent-cyan)" />
+      <div className="w-px h-6 bg-border" />
+      <Stat value={errors} label="Hata" color="var(--accent-red)" />
+
+      <div className="flex-1 min-w-[120px] flex items-center gap-3">
+        <div className="flex-1 h-2.5 rounded-full bg-elevated overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, var(--accent-cyan-deep), var(--accent-cyan))',
+              boxShadow: '0 0 10px rgba(34,211,238,.6)',
+            }}
+          />
         </div>
-
-        <div className="w-px h-8 bg-gray-600" />
-
-        <div className="flex flex-col items-center min-w-[60px]">
-          <span className={`text-2xl font-bold ${accuracyColor}`}>{accuracy}%</span>
-          <span className="text-xs text-gray-400">Doğruluk</span>
-        </div>
-
-        <div className="w-px h-8 bg-gray-600" />
-
-        <div className="flex flex-col items-center min-w-[60px]">
-          <span className="text-2xl font-bold text-gray-200">{formatTime(elapsedSeconds)}</span>
-          <span className="text-xs text-gray-400">Süre</span>
-        </div>
-
-        <div className="w-px h-8 bg-gray-600" />
-
-        <div className="flex flex-col items-center min-w-[60px]">
-          <span className="text-2xl font-bold text-red-400">{errors}</span>
-          <span className="text-xs text-gray-400">Hata</span>
-        </div>
-
-        <div className="flex-1 min-w-[120px]">
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>İlerleme</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
+        <span className="text-sm font-black" style={{ color: 'var(--accent-cyan)' }}>
+          %{Math.round(progress)}
+        </span>
       </div>
     </div>
   );

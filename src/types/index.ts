@@ -112,15 +112,17 @@ export interface TeacherNote {
   readAt: string | null;
 }
 
+// Redesign paleti: klavye ↔ el rehberi ortak, camgöbeği/mor/turuncu ekseni
+// (design/arduino-typing-tutor-redesign LessonView prototipiyle birebir)
 export const FINGER_COLORS: Record<FingerName, string> = {
-  leftPinky:   '#9333EA',
-  leftRing:    '#3B82F6',
-  leftMiddle:  '#10B981',
-  leftIndex:   '#EF4444',
-  leftThumb:   '#6B7280',
-  rightThumb:  '#6B7280',
-  rightIndex:  '#EC4899',
-  rightMiddle: '#06B6D4',
-  rightRing:   '#EAB308',
-  rightPinky:  '#F97316',
+  leftPinky:   '#A78BFA',
+  leftRing:    '#60A5FA',
+  leftMiddle:  '#34D399',
+  leftIndex:   '#F87171',
+  leftThumb:   '#94A3B8',
+  rightThumb:  '#94A3B8',
+  rightIndex:  '#F472B6',
+  rightMiddle: '#22D3EE',
+  rightRing:   '#FACC15',
+  rightPinky:  '#FB923C',
 };

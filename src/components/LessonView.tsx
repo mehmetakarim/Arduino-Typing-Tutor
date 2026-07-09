@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { ArrowLeft, ChevronRight, Target, Zap } from 'lucide-react';
+import { Button, Chip } from './ui';
 import { Lesson } from '../types';
 import { useTyping } from '../hooks/useTyping';
 import { useKeyboard } from '../hooks/useKeyboard';
@@ -101,42 +103,52 @@ export function LessonView({ lesson }: LessonViewProps) {
   const lessonLabel = lesson.isExam ? 'Sınav' : `Ders ${lesson.id}`;
 
   return (
-    <div className="flex flex-col h-screen text-white p-4 gap-3 screen-bg">
+    <div className="flex flex-col h-screen overflow-hidden text-primary screen-bg" style={{ padding: '14px 28px 10px' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="text-sm text-gray-400">{moduleNum} &rsaquo; {lessonLabel}</span>
-          <h1 className="text-lg font-bold">{lesson.title}</h1>
-          <p className="text-sm text-gray-400">{lesson.description}</p>
+      <div className="flex items-start gap-4 flex-shrink-0">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-xs font-extrabold text-subtle">
+            <span>{moduleNum}</span>
+            <ChevronRight size={12} strokeWidth={3} />
+            <span style={{ color: 'var(--accent-cyan)' }}>{lessonLabel}</span>
+          </div>
+          <div className="flex items-baseline gap-3 mt-0.5 flex-wrap">
+            <h1 className="m-0 text-[21px] font-black tracking-tight">{lesson.title}</h1>
+            <span className="text-[13.5px] font-semibold text-secondary truncate">{lesson.description}</span>
+          </div>
         </div>
-        <div className="flex gap-2 text-sm">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {effectiveMinAccuracy && (
-            <span className="bg-blue-900/50 border border-blue-600 text-blue-300 px-2 py-1 rounded-md">
-              Min: %{effectiveMinAccuracy} doğruluk
-            </span>
+            <Chip size="sm" color="var(--accent-lime)">
+              <Target size={13} strokeWidth={2.4} />
+              Min %{effectiveMinAccuracy} doğruluk
+            </Chip>
           )}
           {lesson.minWPM && (
-            <span className="bg-purple-900/50 border border-purple-600 text-purple-300 px-2 py-1 rounded-md">
-              Min: {lesson.minWPM} WPM
-            </span>
+            <Chip size="sm" color="var(--accent-amber)">
+              <Zap size={13} strokeWidth={2.4} />
+              Min {lesson.minWPM} WPM
+            </Chip>
           )}
-          <button
-            onClick={() => setScreen('menu')}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-md text-sm transition-colors"
-          >
-            ← Menü
-          </button>
+          <Button variant="secondary" size="sm" onClick={() => setScreen('menu')}>
+            <ArrowLeft size={15} strokeWidth={2.6} />
+            Menü
+          </Button>
         </div>
       </div>
 
       {/* Typing area */}
-      <TypingArea content={lesson.content} typed={typed} currentIndex={currentIndex} />
+      <div className="flex-shrink-0 mt-3">
+        <TypingArea content={lesson.content} typed={typed} currentIndex={currentIndex} />
+      </div>
 
       {/* Stats */}
-      <StatsPanel wpm={wpm} accuracy={accuracy} elapsedSeconds={elapsedSeconds} errors={errors} progress={progress} />
+      <div className="flex-shrink-0 mt-2.5">
+        <StatsPanel wpm={wpm} accuracy={accuracy} elapsedSeconds={elapsedSeconds} errors={errors} progress={progress} />
+      </div>
 
-      {/* Keyboard */}
-      <div className="flex justify-center">
+      {/* Keyboard — kalan alanda ortalanır */}
+      <div className="flex-1 flex items-center justify-center min-h-0">
         <Keyboard
           activeKey={activeChar}
           lastKey={typed[typed.length - 1]}
@@ -145,20 +157,20 @@ export function LessonView({ lesson }: LessonViewProps) {
         />
       </div>
 
-      {/* Hand guide */}
-      <HandGuide activeFinger={activeFinger} isShiftRequired={isShiftRequired} />
-
-      {/* Reset button */}
-      {!isComplete && (
-        <div className="flex justify-center">
-          <button
-            onClick={reset}
-            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-          >
-            Yeniden Başla
-          </button>
-        </div>
-      )}
+      {/* Hand guide + reset */}
+      <div className="flex-shrink-0">
+        <HandGuide activeFinger={activeFinger} isShiftRequired={isShiftRequired} />
+        {!isComplete && (
+          <div className="flex justify-center">
+            <button
+              onClick={reset}
+              className="bg-transparent border-none cursor-pointer text-xs font-bold text-subtle hover:text-secondary transition-colors underline underline-offset-[3px]"
+            >
+              Yeniden Başla
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
