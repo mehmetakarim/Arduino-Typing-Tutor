@@ -1,15 +1,26 @@
 import { useState, useEffect } from 'react';
+import { ArrowLeft, Calendar, GraduationCap, Info, Lock, Trash2, Users } from 'lucide-react';
 import { useProfileStore } from '../store/profileStore';
 import { useProgressStore } from '../store/progressStore';
 import { useAuthStore } from '../store/authStore';
 import { loadProfileProgressFromFS } from '../utils/storage';
 import { Spinner } from './Spinner';
+import { Button, Modal, Toggle } from './ui';
 import { supabase } from '../lib/supabase';
 import { UserProgress } from '../types';
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: 'var(--bg-elevated)',
+  border: '1px solid var(--bg-border)',
+  borderRadius: 10,
+  fontSize: 12,
+  color: 'var(--text-primary)',
+  fontFamily: 'Nunito, sans-serif',
+};
 
 function getWeeklySummary(stats: UserProgress) {
   const now = Date.now();
@@ -133,10 +144,15 @@ export function ParentPanel() {
   if (view === 'pin') {
     return (
       <div className="min-h-screen screen-bg flex items-center justify-center">
-        <div className="w-80 rounded-2xl border border-white/10 p-8 text-center" style={{ backgroundColor: '#1A1A1B' }}>
-          <div className="text-4xl mb-4">🔐</div>
-          <h2 className="text-white text-xl font-bold mb-2">Ebeveyn Paneli</h2>
-          <p className="text-gray-400 text-sm mb-6">4 haneli PIN gir</p>
+        <div className="w-80 bg-surface border border-border rounded-card p-8 text-center">
+          <div
+            className="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
+            style={{ background: 'color-mix(in srgb, var(--accent-cyan) 12%, transparent)', border: '2px solid var(--accent-cyan)' }}
+          >
+            <Lock size={24} strokeWidth={2.2} style={{ color: 'var(--accent-cyan)' }} />
+          </div>
+          <h2 className="text-primary text-xl font-black mb-2">Ebeveyn Paneli</h2>
+          <p className="text-secondary text-sm font-semibold mb-6">4 haneli PIN gir</p>
           <input
             type="password"
             maxLength={4}
@@ -145,12 +161,12 @@ export function ParentPanel() {
             onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
             placeholder="••••"
             autoFocus
-            className="w-full text-center text-2xl tracking-widest bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 mb-3"
+            className="w-full text-center text-2xl tracking-widest bg-muted border border-border rounded-control px-4 py-3 text-primary outline-none focus:border-accent-cyan mb-3"
           />
-          {pinError && <p className="text-red-400 text-sm mb-3">Hatalı PIN</p>}
+          {pinError && <p className="text-accent-red text-sm font-bold mb-3">Hatalı PIN</p>}
           <div className="flex gap-3">
-            <button onClick={handlePinSubmit} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold">Gir</button>
-            <button onClick={() => setScreen('menu')} className="px-4 py-2.5 text-gray-400 hover:text-white rounded-xl" style={{ backgroundColor: '#242425' }}>İptal</button>
+            <Button className="flex-1" onClick={handlePinSubmit}>Gir</Button>
+            <Button variant="secondary" onClick={() => setScreen('menu')}>İptal</Button>
           </div>
         </div>
       </div>
@@ -158,25 +174,36 @@ export function ParentPanel() {
   }
 
   return (
-    <div className="min-h-screen screen-bg p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Ebeveyn Paneli</h1>
-            <p className="text-gray-400 text-sm mt-1">{profiles.length} profil</p>
+    <div className="min-h-screen screen-bg pb-10">
+      {/* Header */}
+      <header className="bg-surface border-b border-border px-8 py-5">
+        <div className="max-w-4xl mx-auto flex items-center gap-3.5">
+          <div className="w-[42px] h-[42px] rounded-control bg-elevated border border-border flex items-center justify-center">
+            <Users size={20} strokeWidth={2.1} className="text-secondary" />
           </div>
-          <div className="flex gap-3">
-            <button onClick={() => setView('settings')} className="px-4 py-2 rounded-xl text-gray-400 hover:text-white text-sm transition-colors" style={{ backgroundColor: '#1A1A1B' }}>⚙️ Ayarlar</button>
-            <button onClick={() => setScreen('menu')} className="px-4 py-2 rounded-xl text-gray-400 hover:text-white text-sm transition-colors" style={{ backgroundColor: '#1A1A1B' }}>← Geri</button>
+          <div className="flex-1">
+            <h1 className="m-0 text-[19px] font-black text-primary">Ebeveyn Paneli</h1>
+            <p className="m-0 mt-0.5 text-[13px] font-semibold text-secondary">
+              Çocuklarınızın ilerlemesini takip edin · {profiles.length} profil
+            </p>
           </div>
+          <Button variant="secondary" size="sm" onClick={() => setView('settings')}>
+            <Lock size={15} strokeWidth={2.2} />
+            PIN Ayarları
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setScreen('menu')} className="!text-secondary hover:!text-primary">
+            <ArrowLeft size={15} strokeWidth={2.4} />
+            Kapat
+          </Button>
         </div>
+      </header>
 
+      <div className="max-w-4xl mx-auto px-8 pt-6">
         {/* Profil kartları */}
         {!statsLoaded ? (
-          <div className="text-center text-gray-400 py-20">İstatistikler yükleniyor...</div>
+          <div className="text-center text-secondary font-semibold py-20">İstatistikler yükleniyor...</div>
         ) : profiles.length === 0 ? (
-          <div className="text-center text-gray-400 py-20">Henüz profil yok.</div>
+          <div className="text-center text-secondary font-semibold py-20">Henüz profil yok.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {profiles.map(profile => {
@@ -193,47 +220,44 @@ export function ParentPanel() {
               const mins = Math.floor((stats.totalTimeSpent % 3600) / 60);
 
               return (
-                <div key={profile.id} className="rounded-2xl border border-white/10 p-6" style={{ backgroundColor: '#1A1A1B' }}>
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ backgroundColor: profile.color }}>
+                <div key={profile.id} className="bg-surface border border-border rounded-panel p-5">
+                  <div className="flex items-center gap-3.5 mb-4">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-black text-white flex-shrink-0"
+                      style={{ background: `color-mix(in srgb, ${profile.color} 15%, transparent)`, border: `2px solid ${profile.color}`, color: profile.color }}
+                    >
                       {profile.name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold">{profile.name}</h3>
-                      <p className="text-gray-500 text-xs">{stats.badges.length} rozet · {stats.currentStreak} gün seri</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="m-0 text-[15.5px] font-extrabold text-primary">{profile.name}</h3>
+                      <p className="m-0 mt-0.5 text-xs font-semibold text-subtle">{stats.badges.length} rozet · {stats.currentStreak} gün seri</p>
                     </div>
-                    {/* Profil sil */}
                     {confirmDeleteProfile === profile.id ? (
                       <div className="flex gap-2 items-center">
-                        <span className="text-red-400 text-xs">Emin misin?</span>
-                        <button
-                          onClick={async () => { await deleteProfile(profile.id); setConfirmDeleteProfile(null); }}
-                          className="px-2 py-1 bg-red-500 hover:bg-red-400 text-white text-xs rounded-lg"
-                        >Sil</button>
-                        <button
-                          onClick={() => setConfirmDeleteProfile(null)}
-                          className="px-2 py-1 text-gray-400 hover:text-white text-xs rounded-lg"
-                          style={{ backgroundColor: '#242425' }}
-                        >İptal</button>
+                        <span className="text-accent-red text-xs font-bold">Emin misin?</span>
+                        <Button variant="destructive" size="sm" onClick={async () => { await deleteProfile(profile.id); setConfirmDeleteProfile(null); }}>Sil</Button>
+                        <Button variant="secondary" size="sm" onClick={() => setConfirmDeleteProfile(null)}>İptal</Button>
                       </div>
                     ) : (
                       <button
                         onClick={() => setConfirmDeleteProfile(profile.id)}
-                        className="text-gray-600 hover:text-red-400 text-xs transition-colors"
                         title="Profili sil"
-                      >🗑️</button>
+                        className="w-9 h-9 rounded-[10px] bg-transparent border border-border text-subtle hover:text-accent-red hover:border-accent-red cursor-pointer flex items-center justify-center transition-colors"
+                      >
+                        <Trash2 size={15} strokeWidth={2.1} />
+                      </button>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: 'Tamamlanan Ders', value: completedCount },
-                      { label: 'Ort. WPM', value: avgWpm },
-                      { label: 'Ort. Doğruluk', value: `%${avgAcc}` },
-                      { label: 'Toplam Süre', value: hours > 0 ? `${hours}s ${mins}d` : `${mins}d` },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="rounded-xl p-3" style={{ backgroundColor: '#0D0D0E' }}>
-                        <p className="text-gray-500 text-xs mb-1">{label}</p>
-                        <p className="text-white font-bold text-lg">{value}</p>
+                      { label: 'Tamamlanan Ders', value: completedCount, color: 'var(--accent-lime)' },
+                      { label: 'Ort. WPM', value: avgWpm, color: 'var(--accent-cyan-soft)' },
+                      { label: 'Ort. Doğruluk', value: `%${avgAcc}`, color: 'var(--accent-amber)' },
+                      { label: 'Toplam Süre', value: hours > 0 ? `${hours}s ${mins}d` : `${mins}d`, color: 'var(--accent-purple)' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="bg-muted rounded-control p-3">
+                        <p className="m-0 text-xs font-bold text-subtle mb-1">{label}</p>
+                        <p className="m-0 font-black text-lg" style={{ color }}>{value}</p>
                       </div>
                     ))}
                   </div>
@@ -246,7 +270,10 @@ export function ParentPanel() {
         {/* Haftalık Özet */}
         {statsLoaded && profiles.length > 0 && (
           <div className="mt-6">
-            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">📅 Bu Haftanın Özeti</h2>
+            <h2 className="flex items-center gap-2 text-xs font-black text-subtle uppercase tracking-[1.5px] mb-3">
+              <Calendar size={14} strokeWidth={2.4} />
+              Bu Haftanın Özeti
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {profiles.map(profile => {
                 const stats = profileStats[profile.id];
@@ -255,57 +282,57 @@ export function ParentPanel() {
                 const hasActivity = w.thisWeek > 0;
 
                 return (
-                  <div key={profile.id} className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
-                    {/* Profil başlığı */}
+                  <div key={profile.id} className="bg-surface border border-border rounded-panel p-5">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ backgroundColor: profile.color }}>
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0"
+                        style={{ background: `color-mix(in srgb, ${profile.color} 15%, transparent)`, border: `2px solid ${profile.color}`, color: profile.color }}
+                      >
                         {profile.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-white font-medium">{profile.name}</span>
+                      <span className="text-primary font-extrabold text-sm">{profile.name}</span>
                     </div>
 
                     {!hasActivity ? (
-                      <p className="text-gray-600 text-sm text-center py-3">Bu hafta henüz ders yapılmadı</p>
+                      <p className="m-0 text-subtle text-sm font-semibold text-center py-3">Bu hafta henüz ders yapılmadı</p>
                     ) : (
                       <>
-                        {/* Özet sayılar */}
                         <div className="grid grid-cols-3 gap-2 mb-4">
-                          <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: '#0D0D0E' }}>
-                            <p className="text-white font-bold text-xl">{w.thisWeek}</p>
-                            <p className="text-gray-500 text-xs">ders</p>
+                          <div className="bg-muted rounded-control p-2.5 text-center">
+                            <p className="m-0 font-black text-xl" style={{ color: 'var(--accent-lime)' }}>{w.thisWeek}</p>
+                            <p className="m-0 text-xs font-bold text-subtle">ders</p>
                           </div>
-                          <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: '#0D0D0E' }}>
-                            <p className="text-white font-bold text-xl">{w.thisWpm}</p>
-                            <p className="text-gray-500 text-xs">ort. WPM</p>
+                          <div className="bg-muted rounded-control p-2.5 text-center">
+                            <p className="m-0 font-black text-xl" style={{ color: 'var(--accent-cyan-soft)' }}>{w.thisWpm}</p>
+                            <p className="m-0 text-xs font-bold text-subtle">ort. WPM</p>
                           </div>
-                          <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: '#0D0D0E' }}>
+                          <div className="bg-muted rounded-control p-2.5 text-center">
                             {w.wpmDelta !== null ? (
                               <>
-                                <p className={`font-bold text-xl ${w.wpmDelta > 0 ? 'text-green-400' : w.wpmDelta < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                                <p className="m-0 font-black text-xl" style={{ color: w.wpmDelta > 0 ? 'var(--accent-lime)' : w.wpmDelta < 0 ? 'var(--accent-red)' : 'var(--text-secondary)' }}>
                                   {w.wpmDelta > 0 ? '+' : ''}{w.wpmDelta}
                                 </p>
-                                <p className="text-gray-500 text-xs">WPM farkı</p>
+                                <p className="m-0 text-xs font-bold text-subtle">WPM farkı</p>
                               </>
                             ) : (
                               <>
-                                <p className="text-gray-500 font-bold text-xl">—</p>
-                                <p className="text-gray-600 text-xs">önceki hafta yok</p>
+                                <p className="m-0 text-subtle font-black text-xl">—</p>
+                                <p className="m-0 text-xs font-bold text-subtle">önceki hafta yok</p>
                               </>
                             )}
                           </div>
                         </div>
 
-                        {/* Günlük aktivite mini bar */}
                         <ResponsiveContainer width="100%" height={60}>
                           <BarChart data={w.days} barSize={14}>
-                            <XAxis dataKey="label" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <XAxis dataKey="label" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
                             <Tooltip
-                              contentStyle={{ backgroundColor: '#242425', border: '1px solid #2E2E2F', borderRadius: 8, fontSize: 12 }}
+                              contentStyle={CHART_TOOLTIP_STYLE}
                               formatter={(v) => [`${v} ders`, '']}
                             />
                             <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                               {w.days.map((d, i) => (
-                                <Cell key={i} fill={d.count > 0 ? profile.color : '#2E2E2F'} />
+                                <Cell key={i} fill={d.count > 0 ? profile.color : 'var(--bg-border)'} />
                               ))}
                             </Bar>
                           </BarChart>
@@ -322,9 +349,8 @@ export function ParentPanel() {
         {/* Karşılaştırma grafikleri */}
         {statsLoaded && profiles.length > 1 && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* WPM Karşılaştırma */}
-            <div className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
-              <p className="text-gray-400 text-sm font-medium mb-4">Ortalama WPM Karşılaştırması</p>
+            <div className="bg-surface border border-border rounded-panel p-5">
+              <p className="m-0 text-secondary text-sm font-extrabold mb-4">Ortalama WPM Karşılaştırması</p>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={profiles.map(p => ({
                   name: p.name,
@@ -333,10 +359,10 @@ export function ParentPanel() {
                     : 0,
                   color: p.color,
                 }))} barSize={32}>
-                  <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                  <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#242425', border: '1px solid #2E2E2F', borderRadius: 10, color: '#F2F2F2' }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                     formatter={(v) => [`${v} WPM`, 'Hız']}
                   />
                   <Bar dataKey="wpm" radius={[6, 6, 0, 0]}>
@@ -346,9 +372,8 @@ export function ParentPanel() {
               </ResponsiveContainer>
             </div>
 
-            {/* Radar — çok profil yetenek karşılaştırması */}
-            <div className="rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
-              <p className="text-gray-400 text-sm font-medium mb-4">Yetenek Profili</p>
+            <div className="bg-surface border border-border rounded-panel p-5">
+              <p className="m-0 text-secondary text-sm font-extrabold mb-4">Yetenek Profili</p>
               <ResponsiveContainer width="100%" height={180}>
                 <RadarChart data={[
                   { subject: 'Hız',      ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.lessonStats.reduce((s,l)=>s+l.bestWPM,0)||0) / Math.max(1, profileStats[p.id]?.lessonStats.length||1))])) },
@@ -357,8 +382,8 @@ export function ParentPanel() {
                   { subject: 'Seri',     ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.longestStreak||0) * 10)])) },
                   { subject: 'Rozetler', ...Object.fromEntries(profiles.map(p => [p.name, Math.min(100, (profileStats[p.id]?.badges.length||0) * 12)])) },
                 ]}>
-                  <PolarGrid stroke="#2E2E2F" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
+                  <PolarGrid stroke="var(--bg-border)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
                   {profiles.map(p => (
                     <Radar key={p.id} name={p.name} dataKey={p.name} stroke={p.color} fill={p.color} fillOpacity={0.15} />
                   ))}
@@ -366,7 +391,7 @@ export function ParentPanel() {
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-3 mt-2 justify-center">
                 {profiles.map(p => (
-                  <span key={p.id} className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <span key={p.id} className="flex items-center gap-1.5 text-xs font-bold text-secondary">
                     <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: p.color }} />
                     {p.name}
                   </span>
@@ -378,13 +403,17 @@ export function ParentPanel() {
 
         {/* Sınıfa Katıl — sadece giriş yapılmışsa */}
         {user && statsLoaded && (
-          <div className="mt-6 rounded-2xl border border-white/10 p-5" style={{ backgroundColor: '#1A1A1B' }}>
-            <h3 className="text-white font-semibold mb-4">📚 Öğretmen Sınıfına Katıl</h3>
-            <div className="flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 bg-surface border border-border rounded-panel p-5">
+            <h3 className="m-0 flex items-center gap-2.5 text-primary text-[14.5px] font-extrabold mb-2">
+              <GraduationCap size={18} strokeWidth={2.1} style={{ color: 'var(--accent-cyan-soft)' }} />
+              Öğretmen Sınıfına Katıl
+            </h3>
+            <p className="m-0 text-xs font-semibold text-secondary mb-3">Öğretmeninizden aldığınız sınıf kodunu girin.</p>
+            <div className="flex flex-col sm:flex-row gap-2.5">
               <select
                 value={selectedProfileId}
                 onChange={e => setSelectedProfileId(e.target.value)}
-                className="bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-indigo-500"
+                className="bg-muted border border-border rounded-[10px] px-3 py-2.5 text-primary text-sm font-bold outline-none focus:border-accent-cyan"
               >
                 {profiles.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
@@ -392,61 +421,71 @@ export function ParentPanel() {
               </select>
               <input
                 type="text"
-                placeholder="Sınıf kodu (ör. ATT-5A)"
+                placeholder="Örn. AB3XQ9"
                 value={classCode}
                 onChange={e => { setClassCode(e.target.value); setJoinMsg(null); }}
                 onKeyDown={e => e.key === 'Enter' && handleJoinClass()}
-                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 text-sm outline-none focus:border-indigo-500"
+                className="flex-1 bg-muted border border-border rounded-[10px] px-4 py-2.5 font-mono text-sm font-bold tracking-[2px] uppercase text-primary placeholder:text-subtle placeholder:normal-case placeholder:tracking-normal outline-none focus:border-accent-cyan"
               />
-              <button
-                onClick={handleJoinClass}
-                disabled={!classCode.trim() || joinLoading}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-40 transition-colors whitespace-nowrap"
-              >
+              <Button size="sm" onClick={handleJoinClass} disabled={!classCode.trim() || joinLoading}>
                 {joinLoading
                   ? <span className="flex items-center gap-2"><Spinner size={14} /> Katılıyor...</span>
                   : 'Katıl'}
-              </button>
+              </Button>
             </div>
             {joinMsg && (
-              <p className={`mt-3 text-xs px-3 py-2 rounded-lg ${joinMsg.type === 'ok' ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
+              <p
+                className="m-0 mt-3 text-xs font-bold px-3 py-2 rounded-lg"
+                style={joinMsg.type === 'ok'
+                  ? { color: 'var(--accent-lime)', background: 'color-mix(in srgb, var(--accent-lime) 10%, transparent)' }
+                  : { color: 'var(--accent-red)', background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}
+              >
                 {joinMsg.text}
               </p>
             )}
           </div>
         )}
 
-        {/* PIN Ayarları görünümü */}
-        {view === 'settings' && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="w-96 rounded-2xl border border-white/10 p-6" style={{ backgroundColor: '#1A1A1B' }}>
-              <h3 className="text-white font-bold text-lg mb-5">PIN Ayarları</h3>
-              <label className="flex items-center gap-3 mb-5 cursor-pointer">
-                <input type="checkbox" checked={pinEnabled} onChange={e => setPinEnabled(e.target.checked)} className="w-4 h-4 accent-indigo-500" />
-                <span className="text-gray-300">PIN korumasını etkinleştir</span>
-              </label>
-              {pinEnabled && (
-                <div className="mb-5">
-                  <p className="text-gray-400 text-sm mb-2">Yeni PIN (4 hane)</p>
-                  <input
-                    type="password"
-                    maxLength={4}
-                    value={newPin}
-                    onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))}
-                    placeholder="••••"
-                    className="w-full text-center text-2xl tracking-widest bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
-                  />
-                  <p className="text-gray-500 text-xs mt-1">Boş bırakırsan mevcut PIN korunur</p>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button onClick={handleSaveSettings} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold">Kaydet</button>
-                <button onClick={() => setView('dashboard')} className="px-4 py-2.5 text-gray-400 hover:text-white rounded-xl" style={{ backgroundColor: '#242425' }}>İptal</button>
-              </div>
-            </div>
+        {/* İpucu */}
+        {statsLoaded && profiles.length > 0 && (
+          <div
+            className="mt-5 rounded-panel px-[18px] py-4 flex gap-3 items-start"
+            style={{ background: 'color-mix(in srgb, var(--accent-cyan) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-cyan) 25%, transparent)' }}
+          >
+            <Info size={18} strokeWidth={2.2} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--accent-cyan-soft)' }} />
+            <p className="m-0 text-[13px] font-semibold text-secondary leading-normal">
+              Günde 15-20 dakikalık kısa, düzenli pratikler uzun oturumlardan daha etkilidir. Çocuğunuzu seriyi bozmamaya teşvik edin.
+            </p>
           </div>
         )}
       </div>
+
+      {/* PIN Ayarları modalı */}
+      <Modal open={view === 'settings'} onClose={() => setView('dashboard')} title="PIN Ayarları" width={400}
+        icon={<Lock size={18} strokeWidth={2.2} style={{ color: 'var(--accent-cyan-soft)' }} />}>
+        <div className="flex items-center justify-between py-3 border-b border-border mb-4">
+          <span className="text-[14.5px] font-bold text-primary">PIN korumasını etkinleştir</span>
+          <Toggle checked={pinEnabled} onChange={setPinEnabled} aria-label="PIN koruması" />
+        </div>
+        {pinEnabled && (
+          <div className="mb-5">
+            <p className="m-0 text-secondary text-sm font-bold mb-2">Yeni PIN (4 hane)</p>
+            <input
+              type="password"
+              maxLength={4}
+              value={newPin}
+              onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))}
+              placeholder="••••"
+              className="w-full text-center text-2xl tracking-widest bg-muted border border-border rounded-control px-4 py-3 text-primary outline-none focus:border-accent-cyan"
+            />
+            <p className="m-0 text-subtle text-xs font-semibold mt-1.5">Boş bırakırsan mevcut PIN korunur</p>
+          </div>
+        )}
+        <div className="flex gap-3">
+          <Button className="flex-1" onClick={handleSaveSettings}>Kaydet</Button>
+          <Button variant="secondary" onClick={() => setView('dashboard')}>İptal</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

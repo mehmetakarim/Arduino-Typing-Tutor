@@ -1,25 +1,26 @@
 import { useEffect, useState } from 'react';
+import { Award, Crown, Cpu, Flame, Medal, Microscope, Radio, Rocket, ShieldCheck, Target, Zap } from 'lucide-react';
 import { useSound } from '../hooks/useSound';
 
-const BADGE_LABELS: Record<string, { emoji: string; label: string; color: string }> = {
-  first_lesson:  { emoji: '🎯', label: 'İlk Ders!',          color: 'from-blue-600 to-blue-800' },
-  streak5:       { emoji: '🔥', label: 'Üst Üste 5!',        color: 'from-orange-600 to-red-700' },
-  fast_fingers:  { emoji: '⚡', label: 'Hızlı Parmaklar!',   color: 'from-yellow-500 to-orange-600' },
-  perfect:       { emoji: '🎖️', label: 'Mükemmel!',          color: 'from-emerald-600 to-green-800' },
-  module1_done:  { emoji: '🥉', label: 'Modül 1 Tamam!',     color: 'from-amber-600 to-yellow-700' },
-  module5_done:  { emoji: '🥇', label: 'Modül 5 Tamam!',     color: 'from-yellow-400 to-amber-600' },
-  module6_done:  { emoji: '🔬', label: 'Modül 6 Tamam!',     color: 'from-cyan-500 to-blue-600' },
-  module7_done:  { emoji: '📡', label: 'Modül 7 Tamam!',     color: 'from-teal-500 to-green-700' },
-  module8_done:  { emoji: '🤖', label: 'Modül 8 Tamam!',     color: 'from-indigo-500 to-violet-700' },
-  final_champ:   { emoji: '👑', label: 'Final Şampiyonu!',   color: 'from-purple-600 to-pink-700' },
+const BADGE_LABELS: Record<string, { Icon: typeof Award; label: string; color: string }> = {
+  first_lesson:  { Icon: Rocket,      label: 'İlk Ders!',        color: '#A3E635' },
+  streak5:       { Icon: Flame,       label: 'Üst Üste 5!',      color: '#FB923C' },
+  fast_fingers:  { Icon: Zap,         label: 'Hızlı Parmaklar!', color: '#FBBF24' },
+  perfect:       { Icon: Target,      label: 'Mükemmel!',        color: '#22D3EE' },
+  module1_done:  { Icon: ShieldCheck, label: 'Modül 1 Tamam!',   color: '#A78BFA' },
+  module5_done:  { Icon: Medal,       label: 'Modül 5 Tamam!',   color: '#F472B6' },
+  module6_done:  { Icon: Microscope,  label: 'Modül 6 Tamam!',   color: '#67E8F9' },
+  module7_done:  { Icon: Radio,       label: 'Modül 7 Tamam!',   color: '#34D399' },
+  module8_done:  { Icon: Cpu,         label: 'Modül 8 Tamam!',   color: '#A78BFA' },
+  final_champ:   { Icon: Crown,       label: 'Final Şampiyonu!', color: '#FBBF24' },
 };
 
 // Basit confetti parçacıkları
 function Confetti() {
   const pieces = Array.from({ length: 18 }, (_, i) => i);
-  const colors = ['#f97316','#6366f1','#22c55e','#ec4899','#eab308','#06b6d4'];
+  const colors = ['#22D3EE', '#A3E635', '#FBBF24', '#F472B6', '#A78BFA', '#FB923C'];
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[28px]">
       {pieces.map(i => (
         <div
           key={i}
@@ -70,48 +71,45 @@ export function BadgeNotification({ badges, onDone }: BadgeNotificationProps) {
   if (badges.length === 0) return null;
 
   const badge = badges[index];
-  const info = BADGE_LABELS[badge] ?? { emoji: '🏅', label: 'Yeni Rozet!', color: 'from-gray-600 to-gray-800' };
+  const info = BADGE_LABELS[badge] ?? { Icon: Award, label: 'Yeni Rozet!', color: '#FBBF24' };
+  const { Icon } = info;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
       {/* Karartma */}
       <div
         className="absolute inset-0 transition-opacity duration-300"
-        style={{ backgroundColor: 'rgba(0,0,0,0.55)', opacity: visible ? 1 : 0 }}
+        style={{ background: 'rgba(5,9,18,.78)', backdropFilter: 'blur(6px)', opacity: visible ? 1 : 0 }}
       />
 
       {/* Kart */}
       <div
-        className={`
-          relative bg-gradient-to-br ${info.color}
-          rounded-3xl px-12 py-10 shadow-2xl text-center
-          transition-all duration-350
-          ${visible ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}
-        `}
-        style={{ minWidth: 280 }}
+        className={`relative bg-surface rounded-[28px] px-12 py-10 text-center transition-all duration-300
+          ${visible ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`}
+        style={{
+          minWidth: 320,
+          border: `2px solid color-mix(in srgb, ${info.color} 50%, transparent)`,
+          boxShadow: `0 0 60px color-mix(in srgb, ${info.color} 20%, transparent)`,
+        }}
       >
         {visible && <Confetti />}
 
-        {/* Parlayan halka */}
+        {/* İkon madalyonu */}
         <div
-          className="absolute inset-0 rounded-3xl"
+          className="w-[110px] h-[110px] mx-auto mb-[18px] rounded-full flex items-center justify-center animate-floaty"
           style={{
-            boxShadow: '0 0 0 0 rgba(255,255,255,0.3)',
-            animation: visible ? 'pulse-ring 1.5s ease-out infinite' : 'none',
+            background: `color-mix(in srgb, ${info.color} 14%, transparent)`,
+            border: `3px solid ${info.color}`,
+            boxShadow: `0 0 40px color-mix(in srgb, ${info.color} 40%, transparent)`,
           }}
-        />
-
-        <div
-          className="text-7xl mb-4 block"
-          style={{ animation: visible ? 'popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both' : 'none' }}
         >
-          {info.emoji}
+          <Icon size={52} strokeWidth={2} style={{ color: info.color }} />
         </div>
 
-        <div className="text-xs text-white/70 uppercase tracking-widest mb-2 font-semibold">
-          🎉 Rozet Kazandın!
+        <div className="text-xs font-black uppercase tracking-[2px] mb-1.5" style={{ color: info.color }}>
+          Yeni Rozet Kazandın!
         </div>
-        <div className="text-2xl font-bold text-white">{info.label}</div>
+        <div className="text-[28px] font-black text-primary">{info.label}</div>
 
         {badges.length > 1 && (
           <div className="flex justify-center gap-1.5 mt-4">
@@ -119,7 +117,7 @@ export function BadgeNotification({ badges, onDone }: BadgeNotificationProps) {
               <div
                 key={i}
                 className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                style={{ backgroundColor: i === index ? 'white' : 'rgba(255,255,255,0.35)' }}
+                style={{ backgroundColor: i === index ? info.color : 'var(--bg-border)' }}
               />
             ))}
           </div>

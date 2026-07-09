@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  ArrowLeft, Award, BarChart3, Check, Copy, Download, Flame, GraduationCap,
+  Lock, Mail, Plus, Presentation, Trash2,
+} from 'lucide-react';
 import { Spinner } from './Spinner';
 import { useProgressStore } from '../store/progressStore';
 import { useAuthStore } from '../store/authStore';
+import { Button, Tabs } from './ui';
 import { supabase } from '../lib/supabase';
 import { downloadDir, join } from '@tauri-apps/api/path';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
@@ -24,25 +29,25 @@ interface StudentStat {
 
 interface Toast { id: number; text: string; }
 
-const MEDALS = ['🥇', '🥈', '🥉'];
+const RANK_COLORS = ['#FBBF24', '#CBD5E1', '#FB923C'];
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 p-4" style={{ backgroundColor: '#1A1A1B' }}>
-      <p className="text-gray-500 text-xs mb-1">{label}</p>
-      <p className="text-white text-2xl font-bold">{value}</p>
-      {sub && <p className="text-gray-600 text-xs mt-0.5">{sub}</p>}
+    <div className="bg-surface border border-border rounded-panel p-4">
+      <p className="m-0 text-subtle text-xs font-bold mb-1">{label}</p>
+      <p className="m-0 text-primary text-2xl font-black">{value}</p>
+      {sub && <p className="m-0 text-subtle text-xs font-semibold mt-0.5">{sub}</p>}
     </div>
   );
 }
 
 function WpmBar({ value, max }: { value: number; max: number }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  const color = value >= 40 ? '#10B981' : value >= 25 ? '#F59E0B' : '#6366F1';
+  const color = value >= 40 ? 'var(--accent-lime)' : value >= 25 ? 'var(--accent-amber)' : 'var(--accent-cyan)';
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-sm w-8 text-right" style={{ color }}>{value}</span>
-      <div className="w-24 h-1.5 rounded-full bg-white/5">
+      <span className="font-mono text-sm font-bold w-8 text-right" style={{ color }}>{value}</span>
+      <div className="w-24 h-1.5 rounded-full bg-elevated">
         <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
     </div>
@@ -77,7 +82,7 @@ async function downloadCsv(className: string, students: StudentStat[], toast: (m
     const dir = await downloadDir();
     const filePath = await join(dir, filename);
     await writeTextFile(filePath, '﻿' + csv); // BOM — Excel Türkçe uyumu
-    toast(`📥 Kaydedildi: İndirilenler/${filename}`);
+    toast(`Kaydedildi: İndirilenler/${filename}`);
   } else {
     // Tarayıcı fallback
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -156,9 +161,9 @@ export function TeacherPanel() {
       parsed.forEach(s => {
         const prev = prevStudents.current.find(p => p.profileId === s.profileId);
         if (prev && s.completedLessons > prev.completedLessons) {
-          addToast(`📚 ${s.studentName} yeni bir ders tamamladı! (${s.completedLessons} ders)`);
+          addToast(`${s.studentName} yeni bir ders tamamladı! (${s.completedLessons} ders)`);
         } else if (prev && s.avgWpm > prev.avgWpm) {
-          addToast(`⚡ ${s.studentName} WPM rekorunu kırdı! (${s.avgWpm} WPM)`);
+          addToast(`${s.studentName} WPM rekorunu kırdı! (${s.avgWpm} WPM)`);
         }
       });
     }
@@ -197,10 +202,10 @@ export function TeacherPanel() {
     setDeleting(false);
     setDeleteTarget(null);
     if (!error && count && count > 0) {
-      addToast(`🗑️ ${student.studentName} sınıftan çıkarıldı`);
+      addToast(`${student.studentName} sınıftan çıkarıldı`);
       await loadStudents(selectedClass.id);
     } else {
-      addToast('❌ Silinemedi — yetki hatası olabilir');
+      addToast('Silinemedi — yetki hatası olabilir');
     }
   }
 
@@ -219,276 +224,306 @@ export function TeacherPanel() {
   const maxWpm = Math.max(...students.map(s => s.avgWpm), 1);
 
   return (
-    <div className="min-h-screen screen-bg p-6 relative">
+    <div className="min-h-screen screen-bg pb-10 relative">
       {/* Toast bildirimleri */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map(t => (
-          <div key={t.id} className="bg-indigo-600 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl animate-slide-up max-w-xs">
+          <div key={t.id} className="bg-surface border border-border text-primary text-sm font-bold px-4 py-2.5 rounded-panel animate-toast-in max-w-xs" style={{ boxShadow: '0 10px 30px rgba(0,0,0,.4)' }}>
             {t.text}
           </div>
         ))}
       </div>
 
       {/* Üst bar */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Öğretmen Paneli</h1>
-          <p className="text-gray-400 text-sm mt-0.5">{user?.fullName || user?.email}</p>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setScreen('profile-select')} className="px-4 py-2 rounded-xl text-sm text-gray-400 hover:text-white transition-colors" style={{ backgroundColor: '#242425' }}>← Geri</button>
-          <button onClick={handleSignOut} className="px-4 py-2 rounded-xl text-sm text-gray-400 hover:text-white transition-colors" style={{ backgroundColor: '#242425' }}>Çıkış</button>
-        </div>
-      </div>
-
-      {/* Sekmeler */}
-      <div className="flex gap-2 mb-6">
-        {(['classes', 'leaderboard'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className="px-5 py-2 rounded-xl text-sm font-medium transition-all"
-            style={{ backgroundColor: tab === t ? '#6366F1' : '#1A1A1B', color: tab === t ? 'white' : '#9CA3AF', border: tab === t ? 'none' : '1px solid rgba(255,255,255,0.08)' }}>
-            {t === 'classes' ? '📚 Sınıflarım' : '🏆 Leaderboard'}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Sınıflar sekmesi ── */}
-      {tab === 'classes' && (
-        <div className="max-w-2xl">
-          <div className="rounded-2xl border border-white/10 p-5 mb-6" style={{ backgroundColor: '#1A1A1B' }}>
-            <h3 className="text-white font-semibold mb-3">Yeni Sınıf Oluştur</h3>
-            <div className="flex gap-3">
-              <input type="text" placeholder="Sınıf adı (ör. 5-A)" value={newClassName}
-                onChange={e => setNewClassName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createClass()}
-                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm" />
-              <button onClick={createClass} disabled={!newClassName.trim() || loading}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-40 transition-colors">
-                {loading ? <span className="flex items-center gap-2"><Spinner size={14} />Oluşturuluyor...</span> : 'Oluştur'}
-              </button>
-            </div>
+      <header className="bg-surface border-b border-border px-8 py-5">
+        <div className="max-w-4xl mx-auto flex items-center gap-3.5">
+          <div
+            className="w-[42px] h-[42px] rounded-control flex items-center justify-center"
+            style={{ background: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent)' }}
+          >
+            <GraduationCap size={20} strokeWidth={2.1} style={{ color: 'var(--accent-purple)' }} />
           </div>
-
-          {classes.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-8">Henüz sınıf oluşturmadınız.</p>
-          ) : (
-            <div className="grid gap-3">
-              {classes.map(cls => (
-                <div key={cls.id} className="flex items-center justify-between p-5 rounded-2xl border border-white/10 hover:border-indigo-500/40 transition-all" style={{ backgroundColor: '#1A1A1B' }}>
-                  <div>
-                    <p className="text-white font-medium">{cls.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-gray-500 text-xs">Katılım kodu:</span>
-                      <button onClick={() => copyCode(cls.code)}
-                        className="font-mono text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-0.5 rounded transition-colors" title="Kopyala">
-                        {cls.code} {copiedCode === cls.code ? '✓' : '📋'}
-                      </button>
-                    </div>
-                  </div>
-                  <button onClick={() => { setSelectedClass(cls); setTab('leaderboard'); }}
-                    className="px-4 py-1.5 rounded-lg text-xs font-medium text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/10 transition-colors">
-                    Leaderboard →
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex-1">
+            <h1 className="m-0 text-[19px] font-black text-primary">Öğretmen Paneli</h1>
+            <p className="m-0 mt-0.5 text-[13px] font-semibold text-secondary">
+              {user?.fullName || user?.email}{classes.length > 0 && ` · ${classes.length} sınıf`}
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setScreen('profile-select')} className="!text-secondary hover:!text-primary">
+            <ArrowLeft size={15} strokeWidth={2.4} />
+            Geri
+          </Button>
+          <Button variant="secondary" size="sm" onClick={handleSignOut}>Çıkış</Button>
         </div>
-      )}
+      </header>
 
-      {/* ── Leaderboard sekmesi ── */}
-      {tab === 'leaderboard' && (
-        <div className="max-w-4xl">
-          {/* Sınıf seçici */}
-          <div className="flex gap-2 mb-5 flex-wrap items-center">
-            {classes.map(cls => (
-              <button key={cls.id} onClick={() => setSelectedClass(cls)}
-                className="px-4 py-1.5 rounded-lg text-sm transition-all"
-                style={{ backgroundColor: selectedClass?.id === cls.id ? '#6366F120' : '#1A1A1B', color: selectedClass?.id === cls.id ? '#A5B4FC' : '#9CA3AF', border: selectedClass?.id === cls.id ? '1px solid #6366F1' : '1px solid rgba(255,255,255,0.08)' }}>
-                {cls.name}
-              </button>
-            ))}
-            {selectedClass && (
-              <span className="ml-auto flex items-center gap-1.5 text-xs">
-                <span className={`w-2 h-2 rounded-full ${live ? 'bg-green-400' : 'bg-gray-600'}`} style={live ? { animation: 'pulse 2s infinite' } : {}} />
-                <span className={live ? 'text-green-400' : 'text-gray-500'}>{live ? 'Canlı' : 'Bağlanıyor...'}</span>
-              </span>
+      <div className="max-w-4xl mx-auto px-8 pt-5">
+        {/* Sekmeler */}
+        <div className="mb-6">
+          <Tabs
+            items={[
+              { key: 'classes', label: 'Sınıflarım', icon: <Presentation size={15} strokeWidth={2.2} /> },
+              { key: 'leaderboard', label: 'Sıralama', icon: <BarChart3 size={15} strokeWidth={2.2} /> },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+        </div>
+
+        {/* ── Sınıflar sekmesi ── */}
+        {tab === 'classes' && (
+          <div className="max-w-2xl">
+            <div className="bg-surface border border-border rounded-panel p-5 mb-6">
+              <h3 className="m-0 text-primary text-sm font-extrabold mb-3">Yeni Sınıf Oluştur</h3>
+              <div className="flex gap-3">
+                <input type="text" placeholder="Sınıf adı (ör. 5-A)" value={newClassName}
+                  onChange={e => setNewClassName(e.target.value)} onKeyDown={e => e.key === 'Enter' && createClass()}
+                  className="flex-1 bg-muted border border-border rounded-control px-4 py-2.5 text-primary text-sm font-bold placeholder:text-subtle outline-none focus:border-accent-cyan" />
+                <Button size="sm" onClick={createClass} disabled={!newClassName.trim() || loading}>
+                  {loading
+                    ? <span className="flex items-center gap-2"><Spinner size={14} />Oluşturuluyor...</span>
+                    : <><Plus size={15} strokeWidth={2.6} />Oluştur</>}
+                </Button>
+              </div>
+            </div>
+
+            {classes.length === 0 ? (
+              <p className="text-subtle text-sm font-semibold text-center py-8">Henüz sınıf oluşturmadınız.</p>
+            ) : (
+              <div className="grid gap-3">
+                {classes.map(cls => (
+                  <div key={cls.id} className="bg-surface border border-border hover:border-accent-purple rounded-panel p-5 flex items-center justify-between transition-colors">
+                    <div className="min-w-0">
+                      <p className="m-0 text-primary font-extrabold text-[15px]">{cls.name}</p>
+                      <div
+                        className="mt-2 inline-flex items-center gap-2.5 bg-base rounded-[10px] px-3 py-2"
+                        style={{ border: '1px dashed var(--bg-border)' }}
+                      >
+                        <Lock size={13} strokeWidth={2.2} style={{ color: 'var(--accent-cyan-soft)' }} />
+                        <span className="font-mono text-sm font-extrabold tracking-[2px]" style={{ color: 'var(--accent-cyan-soft)' }}>{cls.code}</span>
+                        <button onClick={() => copyCode(cls.code)} title="Kopyala"
+                          className="bg-transparent border-none cursor-pointer text-subtle hover:text-primary flex items-center transition-colors">
+                          {copiedCode === cls.code ? <Check size={14} strokeWidth={2.6} style={{ color: 'var(--accent-lime)' }} /> : <Copy size={14} strokeWidth={2.2} />}
+                        </button>
+                      </div>
+                    </div>
+                    <Button variant="secondary" size="sm" onClick={() => { setSelectedClass(cls); setTab('leaderboard'); }}>
+                      Sıralama →
+                    </Button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
+        )}
 
-          {!selectedClass ? (
-            <p className="text-gray-500 text-sm text-center py-12">Leaderboard görmek için bir sınıf seçin.</p>
-          ) : students.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-sm mb-1">Bu sınıfta henüz öğrenci yok.</p>
-              <p className="text-gray-600 text-xs">Katılım kodu: <span className="font-mono text-indigo-400">{selectedClass.code}</span></p>
-            </div>
-          ) : (
-            <>
-              {/* Özet istatistik kartları */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <StatCard label="Öğrenci" value={students.length} sub="sınıfta kayıtlı" />
-                <StatCard label="Sınıf Ort. WPM" value={classAvgWpm} sub="kelime/dakika" />
-                <StatCard label="Sınıf Ort. Doğruluk" value={`%${classAvgAcc}`} sub="ortalama" />
-                <StatCard label="Toplam Ders" value={totalLessons} sub="tüm öğrenciler" />
-              </div>
-
-              {/* Leaderboard tablosu */}
-              <div className="rounded-2xl border border-white/10 overflow-hidden mb-4" style={{ backgroundColor: '#1A1A1B' }}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/5">
-                      <th className="text-left px-5 py-3 text-gray-500 font-medium w-10">#</th>
-                      <th className="text-left px-5 py-3 text-gray-500 font-medium">Öğrenci</th>
-                      <th className="px-5 py-3 text-gray-500 font-medium text-center">WPM</th>
-                      <th className="text-right px-5 py-3 text-gray-500 font-medium">Doğruluk</th>
-                      <th className="text-right px-5 py-3 text-gray-500 font-medium">Ders</th>
-                      <th className="text-right px-5 py-3 text-gray-500 font-medium">Rozet</th>
-                      <th className="text-right px-5 py-3 text-gray-500 font-medium">Son Aktif</th>
-                      <th className="px-5 py-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((s, i) => (
-                      <tr key={s.profileId} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                        <td className="px-5 py-3 text-center">
-                          {i < 3 ? <span className="text-base">{MEDALS[i]}</span> : <span className="text-gray-600">{i + 1}</span>}
-                        </td>
-                        <td className="px-5 py-3">
-                          <p className="text-white font-medium">{s.studentName}</p>
-                          {s.longestStreak > 0 && (
-                            <p className="text-gray-600 text-xs">🔥 {s.longestStreak} günlük seri</p>
-                          )}
-                        </td>
-                        <td className="px-5 py-3">
-                          <div className="flex justify-center">
-                            <WpmBar value={s.avgWpm} max={maxWpm} />
-                          </div>
-                        </td>
-                        <td className="px-5 py-3 text-right">
-                          <span className={`font-mono text-sm ${s.avgAccuracy >= 90 ? 'text-green-400' : s.avgAccuracy >= 75 ? 'text-yellow-400' : 'text-red-400'}`}>
-                            %{s.avgAccuracy}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-right text-gray-300">{s.completedLessons}</td>
-                        <td className="px-5 py-3 text-right text-gray-400">{s.badgeCount > 0 ? `🏅 ${s.badgeCount}` : '—'}</td>
-                        <td className="px-5 py-3 text-right text-gray-600 text-xs">{timeAgo(s.updatedAt)}</td>
-                        <td className="px-5 py-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => { setNoteTarget(s); setNoteContent(''); setDeleteTarget(null); }}
-                              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
-                              title="Not bırak"
-                            >
-                              📝
-                            </button>
-                            <button
-                              onClick={() => { setDeleteTarget(s); setNoteTarget(null); }}
-                              className="text-xs text-red-500 hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
-                              title="Sınıftan çıkar"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Öğrenci silme onay kutusu */}
-              {deleteTarget && (
-                <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
-                  <p className="text-red-300 text-sm font-semibold mb-1">
-                    🗑️ {deleteTarget.studentName} sınıftan çıkarılsın mı?
-                  </p>
-                  <p className="text-gray-500 text-xs mb-3">
-                    Bu işlem öğrencinin sınıf üyeliğini kaldırır. İlerleme verileri silinmez.
-                  </p>
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => setDeleteTarget(null)}
-                      className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors"
-                    >
-                      İptal
-                    </button>
-                    <button
-                      disabled={deleting}
-                      onClick={() => removeStudent(deleteTarget)}
-                      className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white transition-colors"
-                    >
-                      {deleting ? 'Siliniyor…' : 'Evet, çıkar'}
-                    </button>
-                  </div>
-                </div>
+        {/* ── Leaderboard sekmesi ── */}
+        {tab === 'leaderboard' && (
+          <div>
+            {/* Sınıf seçici */}
+            <div className="flex gap-2 mb-2 flex-wrap items-center">
+              {classes.map(cls => {
+                const active = selectedClass?.id === cls.id;
+                return (
+                  <button key={cls.id} onClick={() => setSelectedClass(cls)}
+                    className="px-4 py-1.5 rounded-[10px] text-sm font-extrabold cursor-pointer transition-all"
+                    style={active
+                      ? { background: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', color: 'var(--accent-purple)', border: '1px solid var(--accent-purple)' }
+                      : { background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--bg-border)' }}>
+                    {cls.name}
+                  </button>
+                );
+              })}
+              {selectedClass && (
+                <span className="ml-auto flex items-center gap-1.5 text-xs font-bold">
+                  <span className="w-2 h-2 rounded-full" style={{ background: live ? 'var(--accent-lime)' : 'var(--bg-border)', animation: live ? 'pulse 2s infinite' : undefined }} />
+                  <span style={{ color: live ? 'var(--accent-lime)' : 'var(--text-muted)' }}>{live ? 'Canlı' : 'Bağlanıyor...'}</span>
+                </span>
               )}
+            </div>
+            {selectedClass && students.length > 0 && (
+              <p className="m-0 mb-4 text-xs font-semibold text-subtle">Kendi gelişimine odaklan — herkes kendi hızında ilerliyor!</p>
+            )}
 
-              {/* Not yazma modalı */}
-              {noteTarget && (
-                <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-4">
-                  <p className="text-indigo-300 text-sm font-semibold mb-2">
-                    📝 {noteTarget.studentName} için not
-                  </p>
-                  <textarea
-                    value={noteContent}
-                    onChange={e => setNoteContent(e.target.value.slice(0, 500))}
-                    placeholder="Öğrenciye bırakmak istediğin notu yaz… (max 500 karakter)"
-                    className="w-full rounded-lg bg-white/5 border border-white/10 text-white text-sm p-3 resize-none outline-none focus:border-indigo-500/50 transition-colors"
-                    rows={3}
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-gray-600 text-xs">{noteContent.length}/500</span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setNoteTarget(null)}
-                        className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors"
-                      >
-                        İptal
-                      </button>
-                      <button
-                        disabled={!noteContent.trim() || noteSending}
-                        onClick={async () => {
-                          if (!user || !selectedClass || !noteContent.trim()) return;
-                          setNoteSending(true);
-                          const ok = await addTeacherNote(
-                            user.id,
-                            selectedClass.id,
-                            noteTarget.profileId,
-                            noteTarget.studentName,
-                            noteContent,
-                          );
-                          setNoteSending(false);
-                          if (ok) {
-                            addToast(`✅ Not gönderildi: ${noteTarget.studentName}`);
-                            setNoteTarget(null);
-                            setNoteContent('');
-                          } else {
-                            addToast('❌ Not gönderilemedi, tekrar dene');
-                          }
-                        }}
-                        className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white transition-colors"
-                      >
-                        {noteSending ? 'Gönderiliyor…' : 'Gönder'}
-                      </button>
+            {!selectedClass ? (
+              <p className="text-subtle text-sm font-semibold text-center py-12">Sıralama görmek için bir sınıf seçin.</p>
+            ) : students.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="m-0 text-secondary text-sm font-semibold mb-1">Bu sınıfta henüz öğrenci yok.</p>
+                <p className="m-0 text-subtle text-xs font-semibold">
+                  Katılım kodu: <span className="font-mono font-extrabold" style={{ color: 'var(--accent-cyan-soft)' }}>{selectedClass.code}</span>
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Özet istatistik kartları */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 mt-2">
+                  <StatCard label="Öğrenci" value={students.length} sub="sınıfta kayıtlı" />
+                  <StatCard label="Sınıf Ort. WPM" value={classAvgWpm} sub="kelime/dakika" />
+                  <StatCard label="Sınıf Ort. Doğruluk" value={`%${classAvgAcc}`} sub="ortalama" />
+                  <StatCard label="Toplam Ders" value={totalLessons} sub="tüm öğrenciler" />
+                </div>
+
+                {/* Leaderboard tablosu */}
+                <div className="bg-surface border border-border rounded-panel overflow-hidden mb-4">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left px-5 py-3 text-subtle font-bold w-10">#</th>
+                        <th className="text-left px-5 py-3 text-subtle font-bold">Öğrenci</th>
+                        <th className="px-5 py-3 text-subtle font-bold text-center">WPM</th>
+                        <th className="text-right px-5 py-3 text-subtle font-bold">Doğruluk</th>
+                        <th className="text-right px-5 py-3 text-subtle font-bold">Ders</th>
+                        <th className="text-right px-5 py-3 text-subtle font-bold">Rozet</th>
+                        <th className="text-right px-5 py-3 text-subtle font-bold">Son Aktif</th>
+                        <th className="px-5 py-3"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((s, i) => (
+                        <tr key={s.profileId} className="border-b border-border hover:bg-elevated/40 transition-colors"
+                          style={i === 0 ? { background: 'color-mix(in srgb, var(--accent-amber) 4%, transparent)' } : undefined}>
+                          <td className="px-5 py-3 text-center">
+                            <span className="text-base font-black" style={{ color: i < 3 ? RANK_COLORS[i] : 'var(--text-muted)' }}>{i + 1}</span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <p className="m-0 text-primary font-extrabold">{s.studentName}</p>
+                            {s.longestStreak > 0 && (
+                              <p className="m-0 mt-0.5 text-subtle text-xs font-semibold flex items-center gap-1">
+                                <Flame size={11} strokeWidth={2.4} style={{ color: 'var(--accent-orange)' }} />
+                                {s.longestStreak} günlük seri
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-5 py-3">
+                            <div className="flex justify-center">
+                              <WpmBar value={s.avgWpm} max={maxWpm} />
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-right">
+                            <span className="font-mono text-sm font-bold" style={{ color: s.avgAccuracy >= 90 ? 'var(--accent-lime)' : s.avgAccuracy >= 75 ? 'var(--accent-amber)' : 'var(--accent-red)' }}>
+                              %{s.avgAccuracy}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-right text-secondary font-bold">{s.completedLessons}</td>
+                          <td className="px-5 py-3 text-right">
+                            {s.badgeCount > 0 ? (
+                              <span className="inline-flex items-center gap-1 text-secondary font-bold">
+                                <Award size={13} strokeWidth={2.2} style={{ color: 'var(--accent-purple)' }} />
+                                {s.badgeCount}
+                              </span>
+                            ) : <span className="text-subtle">—</span>}
+                          </td>
+                          <td className="px-5 py-3 text-right text-subtle text-xs font-semibold">{timeAgo(s.updatedAt)}</td>
+                          <td className="px-5 py-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => { setNoteTarget(s); setNoteContent(''); setDeleteTarget(null); }}
+                                className="bg-transparent border-none cursor-pointer p-1.5 rounded-lg text-subtle hover:text-accent-cyan-soft hover:bg-elevated transition-colors"
+                                title="Not bırak"
+                              >
+                                <Mail size={15} strokeWidth={2.2} />
+                              </button>
+                              <button
+                                onClick={() => { setDeleteTarget(s); setNoteTarget(null); }}
+                                className="bg-transparent border-none cursor-pointer p-1.5 rounded-lg text-subtle hover:text-accent-red transition-colors"
+                                title="Sınıftan çıkar"
+                              >
+                                <Trash2 size={15} strokeWidth={2.2} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Öğrenci silme onay kutusu */}
+                {deleteTarget && (
+                  <div
+                    className="mt-4 rounded-panel p-4"
+                    style={{ border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', background: 'color-mix(in srgb, var(--accent-red) 5%, transparent)' }}
+                  >
+                    <p className="m-0 text-sm font-extrabold mb-1 flex items-center gap-2" style={{ color: 'var(--accent-red)' }}>
+                      <Trash2 size={14} strokeWidth={2.2} />
+                      {deleteTarget.studentName} sınıftan çıkarılsın mı?
+                    </p>
+                    <p className="m-0 text-subtle text-xs font-semibold mb-3">
+                      Bu işlem öğrencinin sınıf üyeliğini kaldırır. İlerleme verileri silinmez.
+                    </p>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)} className="!text-secondary">İptal</Button>
+                      <Button variant="destructive" size="sm" disabled={deleting} onClick={() => removeStudent(deleteTarget)}>
+                        {deleting ? 'Siliniyor…' : 'Evet, çıkar'}
+                      </Button>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* CSV Rapor İndir */}
-              <div className="flex justify-end">
-                <button
-                  onClick={() => void downloadCsv(selectedClass.name, students, addToast)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10 hover:border-white/20 transition-all"
-                  style={{ backgroundColor: '#1A1A1B' }}
-                >
-                  📊 CSV Rapor İndir
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+                {/* Not yazma kutusu */}
+                {noteTarget && (
+                  <div
+                    className="mt-4 rounded-panel p-4"
+                    style={{ border: '1px solid color-mix(in srgb, var(--accent-cyan) 30%, transparent)', background: 'color-mix(in srgb, var(--accent-cyan) 5%, transparent)' }}
+                  >
+                    <p className="m-0 text-sm font-extrabold mb-2 flex items-center gap-2" style={{ color: 'var(--accent-cyan-soft)' }}>
+                      <Mail size={14} strokeWidth={2.2} />
+                      {noteTarget.studentName} için not
+                    </p>
+                    <textarea
+                      value={noteContent}
+                      onChange={e => setNoteContent(e.target.value.slice(0, 500))}
+                      placeholder="Öğrenciye bırakmak istediğin notu yaz… (max 500 karakter)"
+                      className="w-full rounded-control bg-muted border border-border text-primary text-sm font-semibold p-3 resize-none outline-none focus:border-accent-cyan transition-colors placeholder:text-subtle"
+                      rows={3}
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-subtle text-xs font-semibold">{noteContent.length}/500</span>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setNoteTarget(null)} className="!text-secondary">İptal</Button>
+                        <Button
+                          size="sm"
+                          disabled={!noteContent.trim() || noteSending}
+                          onClick={async () => {
+                            if (!user || !selectedClass || !noteContent.trim()) return;
+                            setNoteSending(true);
+                            const ok = await addTeacherNote(
+                              user.id,
+                              selectedClass.id,
+                              noteTarget.profileId,
+                              noteTarget.studentName,
+                              noteContent,
+                            );
+                            setNoteSending(false);
+                            if (ok) {
+                              addToast(`Not gönderildi: ${noteTarget.studentName}`);
+                              setNoteTarget(null);
+                              setNoteContent('');
+                            } else {
+                              addToast('Not gönderilemedi, tekrar dene');
+                            }
+                          }}
+                        >
+                          {noteSending ? 'Gönderiliyor…' : 'Gönder'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CSV Rapor İndir */}
+                <div className="flex justify-end">
+                  <Button variant="secondary" size="sm" onClick={() => void downloadCsv(selectedClass.name, students, addToast)}>
+                    <Download size={15} strokeWidth={2.2} />
+                    CSV Rapor İndir
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

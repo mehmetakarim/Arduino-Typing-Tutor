@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { Check, Mail, X } from 'lucide-react';
 import { useNotesStore } from '../store/notesStore';
 import { TeacherNote } from '../types';
 
@@ -30,53 +31,68 @@ export function TeacherNotesModal({ onClose }: Props) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-black/60 backdrop-blur-sm">
-      <div
-        className="w-full max-w-lg rounded-2xl border border-white/10 shadow-2xl flex flex-col max-h-[80vh]"
-        style={{ backgroundColor: '#1A1A1B' }}
-      >
+    <div
+      className="fixed inset-0 z-50 grid place-items-center p-4 animate-fade-in"
+      style={{ background: 'rgba(5,9,18,.78)', backdropFilter: 'blur(6px)' }}
+    >
+      <div className="w-full max-w-lg bg-surface border border-border rounded-3xl flex flex-col max-h-[80vh] animate-pop-in" style={{ boxShadow: 'var(--shadow-card)' }}>
         {/* Başlık */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <div>
-            <h2 className="text-white font-bold text-lg">📬 Öğretmen Notları</h2>
-            <p className="text-gray-400 text-xs mt-0.5">{unreadNotes.length} okunmamış not</p>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <Mail size={19} strokeWidth={2.1} style={{ color: 'var(--accent-cyan)' }} />
+            <div>
+              <h2 className="m-0 text-primary font-black text-lg">Öğretmen Notları</h2>
+              <p className="m-0 text-secondary text-xs font-semibold mt-0.5">{unreadNotes.length} okunmamış not</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {unreadNotes.length > 1 && (
               <button
                 onClick={handleMarkAll}
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+                className="bg-transparent border-none cursor-pointer text-xs font-extrabold px-3 py-1.5 rounded-lg hover:bg-elevated transition-colors"
+                style={{ color: 'var(--accent-cyan-soft)' }}
               >
                 Tümünü Okundu İşaretle
               </button>
             )}
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-300 text-xl leading-none transition-colors w-8 h-8 flex items-center justify-center"
+              aria-label="Kapat"
+              className="w-8 h-8 rounded-[9px] bg-elevated border border-border text-secondary hover:text-primary cursor-pointer flex items-center justify-center transition-colors"
             >
-              ×
+              <X size={14} strokeWidth={2.6} />
             </button>
           </div>
         </div>
 
         {/* Not listesi */}
-        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-3">
+        <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2.5">
           {unreadNotes.map(note => (
             <div
               key={note.id}
-              className="rounded-xl border border-white/10 p-4 bg-white/[0.03]"
+              className="rounded-control p-3.5"
+              style={{
+                background: 'color-mix(in srgb, var(--accent-cyan) 6%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--accent-cyan) 25%, transparent)',
+                borderLeft: '3px solid var(--accent-cyan)',
+              }}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-white text-sm leading-relaxed flex-1">{note.content}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: 'var(--accent-cyan)' }} />
+                    <span className="text-xs font-bold text-subtle">{timeAgo(note.createdAt)}</span>
+                  </div>
+                  <p className="m-0 mt-1.5 text-primary text-[13.5px] font-semibold leading-normal">{note.content}</p>
+                </div>
                 <button
                   onClick={() => handleMarkRead(note)}
-                  className="text-xs text-gray-500 hover:text-indigo-400 transition-colors shrink-0 mt-0.5"
                   title="Okundu olarak işaretle"
+                  className="bg-transparent border border-border rounded-lg cursor-pointer p-1.5 text-subtle hover:text-accent-lime hover:border-accent-lime shrink-0 transition-colors flex items-center"
                 >
-                  ✓
+                  <Check size={14} strokeWidth={2.6} />
                 </button>
               </div>
-              <p className="text-gray-600 text-xs mt-2">{timeAgo(note.createdAt)}</p>
             </div>
           ))}
         </div>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { Download, X } from 'lucide-react';
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { Toast } from './ui';
 
 function isTauri() {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -45,31 +47,32 @@ export function UpdateChecker() {
   if (!update || dismissed) return null;
 
   return (
-    <div
-      className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 shadow-xl"
-      style={{ backgroundColor: '#1A1A1B' }}
-    >
-      <span className="text-lg">🆕</span>
-      <div>
-        <p className="text-white text-sm font-semibold">
-          Güncelleme mevcut — v{update.version}
-        </p>
-        <p className="text-gray-400 text-xs">İndirilip yeniden başlatılacak.</p>
-      </div>
-      <button
-        onClick={handleInstall}
-        disabled={installing}
-        className="rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-3 py-1.5 text-white text-xs font-semibold transition-colors"
-      >
-        {installing ? 'Yükleniyor…' : 'Yeniden Başlat'}
-      </button>
-      <button
-        onClick={() => setDismissed(true)}
-        className="text-gray-500 hover:text-gray-300 text-lg leading-none transition-colors"
-        aria-label="Kapat"
-      >
-        ×
-      </button>
+    <div className="fixed bottom-5 right-5 z-50">
+      <Toast
+        icon={<Download size={18} strokeWidth={2.2} style={{ color: 'var(--accent-cyan-soft)' }} />}
+        title={`Yeni sürüm hazır: v${update.version}`}
+        description="İndirilip yeniden başlatılacak."
+        actions={
+          <>
+            <button
+              onClick={handleInstall}
+              disabled={installing}
+              className="border-none rounded-lg px-3.5 py-[7px] text-xs font-extrabold cursor-pointer transition-colors disabled:opacity-50"
+              style={{ background: 'var(--accent-cyan)', color: 'var(--on-cyan)' }}
+            >
+              {installing ? 'Yükleniyor…' : 'Yeniden Başlat'}
+            </button>
+            <button
+              onClick={() => setDismissed(true)}
+              className="bg-transparent border-none cursor-pointer px-2 py-[7px] text-xs font-bold text-subtle hover:text-secondary transition-colors inline-flex items-center gap-1"
+              aria-label="Kapat"
+            >
+              <X size={12} strokeWidth={2.6} />
+              Sonra
+            </button>
+          </>
+        }
+      />
     </div>
   );
 }

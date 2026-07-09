@@ -1,4 +1,4 @@
-export function Spinner({ size = 20, color = '#fff' }: { size?: number; color?: string }) {
+export function Spinner({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg
       width={size}

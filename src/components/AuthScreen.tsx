@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { GraduationCap, Users, X } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { UserRole } from '../lib/supabase';
 import { Spinner } from './Spinner';
+import { Button } from './ui';
 
 type Mode = 'login' | 'register' | 'forgot' | 'set-password';
 
@@ -9,6 +11,9 @@ interface AuthScreenProps {
   onClose: () => void;
   initialMode?: Mode;
 }
+
+const INPUT_CLASS =
+  'w-full bg-muted border border-border rounded-control px-4 py-3 text-primary text-sm font-bold placeholder:text-subtle outline-none focus:border-accent-cyan';
 
 export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) {
   const { signIn, signUp, resetPassword, updatePassword, loading, error, clearError } = useAuthStore();
@@ -49,40 +54,49 @@ export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-fade-in">
-      <div
-        className="w-full max-w-sm rounded-2xl border border-white/10 p-8 animate-slide-up"
-        style={{ backgroundColor: '#1A1A1B' }}
-      >
+    <div
+      className="fixed inset-0 z-50 grid place-items-center animate-fade-in"
+      style={{ background: 'rgba(5,9,18,.78)', backdropFilter: 'blur(6px)' }}
+    >
+      <div className="w-full max-w-sm bg-surface border border-border rounded-3xl p-7 animate-pop-in">
         {/* Başlık */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white text-xl font-bold">
+          <h2 className="m-0 text-primary text-xl font-black">
             {mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : mode === 'forgot' ? 'Şifremi Unuttum' : 'Şifremi Değiştir'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg transition-colors">✕</button>
+          <button
+            onClick={onClose}
+            aria-label="Kapat"
+            className="w-8 h-8 rounded-[9px] bg-elevated border border-border text-secondary hover:text-primary cursor-pointer flex items-center justify-center transition-colors"
+          >
+            <X size={14} strokeWidth={2.6} />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Rol seçimi — sadece kayıt modunda */}
           {mode === 'register' && (
             <div>
-              <p className="text-gray-400 text-xs mb-2">Hesap türü</p>
+              <p className="m-0 text-xs font-black tracking-wider uppercase text-subtle mb-2">Hesap türü</p>
               <div className="grid grid-cols-2 gap-2">
-                {([['parent', '👪', 'Ebeveyn'], ['teacher', '👨‍🏫', 'Öğretmen']] as const).map(([r, emoji, label]) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all"
-                    style={{
-                      borderColor: role === r ? '#6366F1' : '#2E2E2F',
-                      backgroundColor: role === r ? '#6366F120' : '#242425',
-                      color: role === r ? '#A5B4FC' : '#9CA3AF',
-                    }}
-                  >
-                    <span>{emoji}</span> {label}
-                  </button>
-                ))}
+                {([['parent', Users, 'Ebeveyn'], ['teacher', GraduationCap, 'Öğretmen']] as const).map(([r, Icon, label]) => {
+                  const active = role === r;
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      className="flex items-center justify-center gap-2 px-4 py-3 rounded-control text-sm font-extrabold cursor-pointer transition-all"
+                      style={{
+                        border: `1px solid ${active ? 'var(--accent-cyan)' : 'var(--bg-border)'}`,
+                        background: active ? 'color-mix(in srgb, var(--accent-cyan) 10%, transparent)' : 'var(--bg-elevated)',
+                        color: active ? 'var(--accent-cyan-soft)' : 'var(--text-secondary)',
+                      }}
+                    >
+                      <Icon size={16} strokeWidth={2.2} /> {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -95,7 +109,7 @@ export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) 
               value={fullName}
               onChange={e => setFullName(e.target.value)}
               required
-              className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm"
+              className={INPUT_CLASS}
             />
           )}
 
@@ -105,7 +119,7 @@ export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) 
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
-            className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm"
+            className={INPUT_CLASS}
           />
 
           {mode !== 'forgot' && (
@@ -117,13 +131,14 @@ export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) 
                 onChange={e => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-indigo-500 text-sm"
+                className={INPUT_CLASS}
               />
               {mode === 'login' && (
                 <button
                   type="button"
                   onClick={() => switchMode('forgot')}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 text-right transition-colors -mt-2"
+                  className="bg-transparent border-none cursor-pointer text-xs font-bold text-right transition-colors -mt-2 p-0"
+                  style={{ color: 'var(--accent-cyan-soft)' }}
                 >
                   Şifremi unuttum
                 </button>
@@ -132,34 +147,40 @@ export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) 
           )}
 
           {error && (
-            <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <p
+              className="m-0 text-xs font-bold rounded-lg px-3 py-2"
+              style={{ color: 'var(--accent-red)', background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)' }}
+            >
               {error}
             </p>
           )}
 
           {success && (
-            <p className="text-green-400 text-xs bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+            <p
+              className="m-0 text-xs font-bold rounded-lg px-3 py-2"
+              style={{ color: 'var(--accent-lime)', background: 'color-mix(in srgb, var(--accent-lime) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-lime) 25%, transparent)' }}
+            >
               {success}
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-          >
+          <Button type="submit" disabled={loading} className="w-full">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <Spinner size={16} /> Lütfen bekle...
               </span>
             ) : mode === 'login' ? 'Giriş Yap' : mode === 'register' ? 'Hesap Oluştur' : mode === 'forgot' ? 'Sıfırlama Bağlantısı Gönder' : 'Şifremi Güncelle'}
-          </button>
+          </Button>
         </form>
 
         {/* Mod değiştir */}
-        <p className="text-center text-gray-500 text-xs mt-5">
+        <p className="m-0 text-center text-subtle text-xs font-bold mt-5">
           {mode === 'forgot' || mode === 'set-password' ? (
-            <button onClick={() => switchMode('login')} className="text-indigo-400 hover:text-indigo-300 transition-colors">
+            <button
+              onClick={() => switchMode('login')}
+              className="bg-transparent border-none cursor-pointer font-bold transition-colors"
+              style={{ color: 'var(--accent-cyan-soft)' }}
+            >
               ← Giriş ekranına dön
             </button>
           ) : (
@@ -168,7 +189,8 @@ export function AuthScreen({ onClose, initialMode = 'login' }: AuthScreenProps) 
               {' '}
               <button
                 onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-                className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="bg-transparent border-none cursor-pointer font-bold transition-colors"
+                style={{ color: 'var(--accent-cyan-soft)' }}
               >
                 {mode === 'login' ? 'Kayıt ol' : 'Giriş yap'}
               </button>
