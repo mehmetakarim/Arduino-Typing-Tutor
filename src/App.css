@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,28 +10,110 @@
   padding: 0;
 }
 
-/* ── Dark theme CSS değişkenleri (varsayılan — sınıf gerekmez) ── */
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — "Küçük bir hacker'ın kokpiti"
+   Koyu tema varsayılan; :root.light ile aydınlık tema.
+   Kaynak: design/arduino-typing-tutor-redesign (Claude Design handoff)
+   ══════════════════════════════════════════════════════════════════ */
 :root {
-  --bg-base:     #0A0A0A;   /* En derin arka plan */
-  --bg-surface:  #1A1A1B;   /* Kartlar, paneller */
-  --bg-elevated: #242425;   /* Hover, yükseltilmiş yüzey */
-  --bg-border:   #2E2E2F;   /* Kenarlar */
-  --bg-muted:    #141414;   /* Stats bar gibi ara yüzeyler */
+  /* Yüzeyler */
+  --bg-base:     #0B1220;
+  --bg-surface:  #111A2C;
+  --bg-elevated: #18233A;
+  --bg-border:   #24324D;
+  --bg-muted:    #0D1526;
 
-  --text-primary:   #F2F2F2;
-  --text-secondary: #9A9A9E;
-  --text-muted:     #5A5A5E;
+  /* Metin */
+  --text-primary:   #F1F5FB;
+  --text-secondary: #A9B7D0;
+  --text-muted:     #6B7A99;
 
-  --accent-blue:   #3B82F6;
-  --accent-green:  #22C55E;
-  --accent-orange: #F97316;
-  --accent-red:    #EF4444;
-  --accent-yellow: #EAB308;
-  --accent-purple: #A855F7;
+  /* Accent'ler */
+  --accent-cyan:      #22D3EE;
+  --accent-cyan-soft: #67E8F9;
+  --accent-cyan-deep: #0E7490;
+  --accent-lime:      #A3E635;
+  --accent-amber:     #FBBF24;
+  --accent-purple:    #A78BFA;
+  --accent-orange:    #FB923C;
+  --accent-red:       #FB7185;
+
+  /* Yazma alanı durum renkleri */
+  --type-correct: #4ADE80;
+  --type-pending: #56668A;
+  --type-caret-bg: #22D3EE;
+  --type-caret-fg: #062830;
+
+  /* Buton kontrast metinleri */
+  --on-cyan:  #062830;
+  --on-gold:  #78350F;
+  --on-red:   #3B0716;
+
+  /* Efektler */
+  --glow-cyan:   0 0 16px rgba(34, 211, 238, 0.3);
+  --glow-lime:   0 0 16px rgba(163, 230, 53, 0.3);
+  --glow-amber:  0 0 20px rgba(251, 191, 36, 0.3);
+  --glow-purple: 0 0 16px rgba(167, 139, 250, 0.3);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+  /* Seviye kimlikleri (MainMenu header) */
+  --level-1-accent: #A3E635;
+  --level-1-gradient: linear-gradient(120deg, #1A2E12, #101A0C);
+  --level-2-accent: #22D3EE;
+  --level-2-gradient: linear-gradient(120deg, #0E2E3E, #0C1F33);
+  --level-3-accent: #A78BFA;
+  --level-3-gradient: linear-gradient(120deg, #241640, #160E28);
+  --level-4-accent: #FB923C;
+  --level-4-gradient: linear-gradient(120deg, #3A2008, #241407);
+  --level-5-accent: #FBBF24;
+  --level-5-gradient: linear-gradient(120deg, #3A2A08, #241C07);
+}
+
+/* ── Aydınlık tema ── */
+:root.light {
+  --bg-base:     #F7FAFD;
+  --bg-surface:  #FFFFFF;
+  --bg-elevated: #F0F4FA;
+  --bg-border:   #D6DEEA;
+  --bg-muted:    #EEF2F8;
+
+  --text-primary:   #16213A;
+  --text-secondary: #5A6786;
+  --text-muted:     #8592AD;
+
+  --accent-cyan:      #0891B2;
+  --accent-cyan-soft: #0E7490;
+  --accent-cyan-deep: #0891B2;
+  --accent-lime:      #65A30D;
+  --accent-amber:     #CA8A04;
+  --accent-purple:    #7C3AED;
+  --accent-orange:    #EA580C;
+  --accent-red:       #E11D48;
+
+  --type-correct: #16A34A;
+  --type-pending: #9AA7C2;
+  --type-caret-bg: #0891B2;
+  --type-caret-fg: #FFFFFF;
+
+  --on-cyan:  #FFFFFF;
+  --on-gold:  #78350F;
+  --on-red:   #FFFFFF;
+
+  --glow-cyan:   0 4px 14px rgba(8, 145, 178, 0.25);
+  --glow-lime:   0 4px 14px rgba(101, 163, 13, 0.25);
+  --glow-amber:  0 4px 14px rgba(202, 138, 4, 0.25);
+  --glow-purple: 0 4px 14px rgba(124, 58, 237, 0.25);
+  --shadow-card: 0 2px 8px rgba(30, 50, 90, 0.06);
+
+  --level-1-gradient: linear-gradient(120deg, #ECF7DF, #F4FAEC);
+  --level-2-gradient: linear-gradient(120deg, #E4F6FA, #EDF3FC);
+  --level-3-gradient: linear-gradient(120deg, #F0EAFC, #F6F2FD);
+  --level-4-gradient: linear-gradient(120deg, #FCEFE2, #FDF6EE);
+  --level-5-gradient: linear-gradient(120deg, #FCF3DC, #FDF9EC);
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Nunito', system-ui, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -39,50 +121,28 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Lesson & Result screen full-page backgrounds */
 .screen-bg {
   background-color: var(--bg-base);
 }
 
-/* ── Tailwind gray sınıflarını koyu renklere yönlendir (varsayılan: koyu tema) ── */
+/* ══════════════════════════════════════════════════════════════════
+   GEÇİŞ UYUMLULUK KATMANI — gray-### sınıflarını token'lara yönlendirir.
+   Faz 3-4'te bileşenler semantik token sınıflarına geçtikçe küçülür,
+   Faz 5'te tamamen silinir. Yeni kodda gray-### KULLANMA.
+   ══════════════════════════════════════════════════════════════════ */
 .bg-gray-900 { background-color: var(--bg-base) !important; }
 .bg-gray-800 { background-color: var(--bg-surface) !important; }
 .bg-gray-700 { background-color: var(--bg-elevated) !important; }
-.bg-gray-600 { background-color: #3A3A3B !important; }
+.bg-gray-600 { background-color: var(--bg-border) !important; }
 .border-gray-700 { border-color: var(--bg-border) !important; }
-.border-gray-600 { border-color: #3A3A3B !important; }
-.border-gray-800 { border-color: #1E1E1F !important; }
+.border-gray-600 { border-color: var(--bg-border) !important; }
+.border-gray-800 { border-color: var(--bg-muted) !important; }
 .text-gray-400 { color: var(--text-secondary) !important; }
 .text-gray-500 { color: var(--text-muted) !important; }
-.text-gray-600 { color: #4A4A4E !important; }
+.text-gray-600 { color: var(--text-muted) !important; }
 
-/* ── Light mode — .light sınıfı eklenince devreye girer ── */
-:root.light {
-  --bg-base:     #F3F4F6;
-  --bg-surface:  #FFFFFF;
-  --bg-elevated: #E5E7EB;
-  --bg-border:   #D1D5DB;
-  --bg-muted:    #F9FAFB;
-  --text-primary:   #111827;
-  --text-secondary: #6B7280;
-  --text-muted:     #9CA3AF;
-}
-
-:root.light body {
-  background-color: #F3F4F6;
-  color: #111827;
-}
-
-:root.light .bg-gray-900 { background-color: #F9FAFB !important; }
-:root.light .bg-gray-800 { background-color: #FFFFFF !important; }
-:root.light .bg-gray-700 { background-color: #E5E7EB !important; }
-:root.light .bg-gray-600 { background-color: #D1D5DB !important; }
-:root.light .text-white  { color: #111827 !important; }
-:root.light .text-gray-200 { color: #1F2937 !important; }
-:root.light .text-gray-400 { color: #6B7280 !important; }
-:root.light .text-gray-500 { color: #9CA3AF !important; }
-:root.light .border-gray-700 { border-color: #E5E7EB !important; }
-:root.light .border-gray-600 { border-color: #D1D5DB !important; }
+:root.light .text-white  { color: var(--text-primary) !important; }
+:root.light .text-gray-200 { color: var(--text-secondary) !important; }
 
 .font-mono {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -128,9 +188,44 @@ body {
 }
 
 @keyframes pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
-  70%  { box-shadow: 0 0 0 12px rgba(99,102,241,0); }
-  100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.45); }
+  50%      { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+@keyframes caretPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+@keyframes shiftPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.55); }
+  50%      { box-shadow: 0 0 0 8px rgba(250, 204, 21, 0); }
+}
+
+@keyframes dotBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes toastIn {
+  0%   { transform: translateX(30px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96%           { transform: scaleY(0.1); }
 }
 
 /* ── Yardımcı animasyon sınıfları ──────────────────────────────────── */
@@ -141,9 +236,12 @@ body {
 .animate-pop-in   { animation: popIn   0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
 .animate-badge    { animation: badgeBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
 .animate-pulse-ring { animation: pulse-ring 1.5s ease-out infinite; }
+.animate-glow-pulse { animation: glowPulse 2.4s ease-in-out infinite; }
+.animate-floaty   { animation: floaty 3s ease-in-out infinite; }
+.animate-toast-in { animation: toastIn 0.4s cubic-bezier(0.2,1.2,0.4,1) both; }
 
 .shimmer-text {
-  background: linear-gradient(90deg, #a78bfa, #ec4899, #f97316, #a78bfa);
+  background: linear-gradient(90deg, #22D3EE, #A3E635, #FBBF24, #22D3EE);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

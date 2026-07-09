@@ -8,8 +8,41 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+      colors: {
+        // Yüzeyler — CSS değişkenlerine bağlı, iki temada otomatik
+        base:     'var(--bg-base)',
+        surface:  'var(--bg-surface)',
+        elevated: 'var(--bg-elevated)',
+        border:   'var(--bg-border)',
+        muted:    'var(--bg-muted)',
+        // Metin
+        primary:   'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        subtle:    'var(--text-muted)',
+        // Accent'ler
+        'accent-cyan':      'var(--accent-cyan)',
+        'accent-cyan-soft': 'var(--accent-cyan-soft)',
+        'accent-cyan-deep': 'var(--accent-cyan-deep)',
+        'accent-lime':      'var(--accent-lime)',
+        'accent-amber':     'var(--accent-amber)',
+        'accent-purple':    'var(--accent-purple)',
+        'accent-orange':    'var(--accent-orange)',
+        'accent-red':       'var(--accent-red)',
+      },
+      boxShadow: {
+        'glow-cyan':   'var(--glow-cyan)',
+        'glow-lime':   'var(--glow-lime)',
+        'glow-amber':  'var(--glow-amber)',
+        'glow-purple': 'var(--glow-purple)',
+        card:          'var(--shadow-card)',
+      },
+      borderRadius: {
+        'card': '20px',
+        'panel': '16px',
+        'control': '12px',
       },
       keyframes: {
         wiggle: {
@@ -35,4 +68,3 @@ export default {
   },
   plugins: [],
 }
-
