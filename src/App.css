@@ -105,10 +105,15 @@
   --glow-purple: 0 4px 14px rgba(124, 58, 237, 0.25);
   --shadow-card: 0 2px 8px rgba(30, 50, 90, 0.06);
 
+  --level-1-accent: #65A30D;
   --level-1-gradient: linear-gradient(120deg, #ECF7DF, #F4FAEC);
+  --level-2-accent: #0891B2;
   --level-2-gradient: linear-gradient(120deg, #E4F6FA, #EDF3FC);
+  --level-3-accent: #7C3AED;
   --level-3-gradient: linear-gradient(120deg, #F0EAFC, #F6F2FD);
+  --level-4-accent: #EA580C;
   --level-4-gradient: linear-gradient(120deg, #FCEFE2, #FDF6EE);
+  --level-5-accent: #CA8A04;
   --level-5-gradient: linear-gradient(120deg, #FCF3DC, #FDF9EC);
 }
 

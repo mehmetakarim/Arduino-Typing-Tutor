@@ -1,30 +1,35 @@
 import { useState } from 'react';
+import {
+  Award, BarChart3, Check, CheckCircle2, Clock, Code2, Flame, GraduationCap,
+  Keyboard as KeyboardIcon, Layers, Lock, Mail, Medal, Play, Rocket, Settings,
+  ShieldCheck, Target, Trophy, Users, Zap,
+} from 'lucide-react';
 import { useProgressStore } from '../store/progressStore';
-import { useSettingsStore } from '../store/settingsStore';
 import { useProfileStore } from '../store/profileStore';
 import { useNotesStore } from '../store/notesStore';
 import { StatsChart } from './StatsChart';
 import { SettingsModal } from './SettingsModal';
 import { TeacherNotesModal } from './TeacherNotesModal';
+import { Chip, ProgressBar, Button } from './ui';
 import lessonsData from '../data/lessons.json';
 import modulesData from '../data/modules.json';
 
-const BADGE_LABELS: Record<string, string> = {
-  first_lesson:  '🎯 İlk Ders',
-  fast_fingers:  '⚡ Hızlı Parmaklar',
-  perfect:       '🎖️ Mükemmeliyetçi',
-  streak5:       '🔥 Üst Üste 5',
-  module1_done:  '🥉 Modül 1',
-  module5_done:  '🥇 Modül 5',
-  final_champ:   '👑 Final Şampiyonu',
-};
+const BADGE_DEFS: { id: string; label: string; color: string; Icon: typeof Flame }[] = [
+  { id: 'first_lesson', label: 'İlk Ders',        color: '#A3E635', Icon: Rocket },
+  { id: 'fast_fingers', label: 'Hızlı Parmaklar', color: '#FBBF24', Icon: Zap },
+  { id: 'perfect',      label: 'Mükemmeliyetçi',  color: '#22D3EE', Icon: Target },
+  { id: 'streak5',      label: 'Üst Üste 5',      color: '#FB923C', Icon: Flame },
+  { id: 'module1_done', label: 'Modül 1',         color: '#A78BFA', Icon: ShieldCheck },
+  { id: 'module5_done', label: 'Modül 5',         color: '#F472B6', Icon: Medal },
+  { id: 'final_champ',  label: 'Final Şampiyonu', color: '#FBBF24', Icon: Trophy },
+];
 
 const LEVEL_INFO = [
-  { min: 0,  label: '🥉 Çırak',          next: 11, color: 'from-[#131318] to-[#0D0D12]', colorLight: 'from-[#EEF2FF] to-[#E0E7FF]', accent: '#6366F1' },
-  { min: 11, label: '🥈 Usta Adayı',     next: 21, color: 'from-[#0F1A14] to-[#0A100E]', colorLight: 'from-[#ECFDF5] to-[#D1FAE5]', accent: '#059669' },
-  { min: 21, label: '🥇 Kod Ustası',     next: 31, color: 'from-[#1A1508] to-[#110E05]', colorLight: 'from-[#FFFBEB] to-[#FEF3C7]', accent: '#D97706' },
-  { min: 31, label: '🏆 Arduino Uzmanı', next: 41, color: 'from-[#081520] to-[#050D18]', colorLight: 'from-[#EFF6FF] to-[#DBEAFE]', accent: '#2563EB' },
-  { min: 41, label: '💎 Sertifikalı',    next: 41, color: 'from-[#160B22] to-[#0E0716]', colorLight: 'from-[#FAF5FF] to-[#EDE9FE]', accent: '#7C3AED' },
+  { min: 0,  num: 1, name: 'Çırak',          next: 11, Icon: Layers },
+  { min: 11, num: 2, name: 'Usta Adayı',     next: 21, Icon: Rocket },
+  { min: 21, num: 3, name: 'Kod Ustası',     next: 31, Icon: Code2 },
+  { min: 31, num: 4, name: 'Arduino Uzmanı', next: 41, Icon: ShieldCheck },
+  { min: 41, num: 5, name: 'Sertifikalı',    next: 41, Icon: Trophy },
 ];
 
 function getLevelInfo(completed: number) {
@@ -38,14 +43,41 @@ function formatTime(s: number): string {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   if (h > 0) return `${h}s ${m}dk`;
-  return `${m} dakika`;
+  return `${m} dk`;
+}
+
+/* ── Öğrenme haritası geometrisi ──────────────────────────────────────
+   Zigzag düzen: düğümler solda (x=260) / sağda (x=760) dönüşümlü,
+   dikey aralık 220px. Kartlar düğümün karşı tarafına yerleşir. */
+const MAP_W = 1020;
+const NODE_XS = [260, 760];
+const START_Y = 110;
+const STEP_Y = 220;
+const CARD_W = 500;
+
+function nodeX(i: number) { return NODE_XS[i % 2]; }
+function nodeY(i: number) { return START_Y + i * STEP_Y; }
+
+function buildPath(fromIdx: number, toIdx: number): string {
+  let d = `M ${nodeX(fromIdx)} ${nodeY(fromIdx)}`;
+  for (let i = fromIdx; i < toIdx; i++) {
+    const midY = (nodeY(i) + nodeY(i + 1)) / 2;
+    d += ` C ${nodeX(i)} ${midY}, ${nodeX(i + 1)} ${midY}, ${nodeX(i + 1)} ${nodeY(i + 1)}`;
+  }
+  return d;
+}
+
+/** Son modülden merkezdeki final düğümüne inen kapanış segmentiyle tam yol */
+function buildFullTrack(nModules: number, finalY: number): string {
+  const lastIdx = nModules - 1;
+  const lastY = nodeY(lastIdx);
+  const midY = (lastY + finalY) / 2;
+  return `${buildPath(0, lastIdx)} C ${nodeX(lastIdx)} ${midY}, ${MAP_W / 2} ${midY}, ${MAP_W / 2} ${finalY}`;
 }
 
 export function MainMenu() {
   const { progress, startLesson, setScreen, reset } = useProgressStore();
-  const { theme } = useSettingsStore();
   const { activeProfile } = useProfileStore();
-  const isLight = theme === 'light';
   const { unreadNotes } = useNotesStore();
   const [showReset, setShowReset] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -53,15 +85,16 @@ export function MainMenu() {
   const [showNotes, setShowNotes] = useState(false);
 
   const totalLessons = lessonsData.filter(l => !l.isExam).length;
-  // Sadece sınav olmayan dersleri say (sınav ID'leri hariç, tekrar oynananlar hariç)
   const nonExamIds = new Set(lessonsData.filter(l => !l.isExam).map(l => l.id));
   const completed = progress.completedLessons.filter(id => nonExamIds.has(id)).length;
   const overallProgress = Math.min(100, Math.round((completed / totalLessons) * 100));
   const levelInfo = getLevelInfo(completed);
-  const nextLevelAt = levelInfo.next;
-  const levelProgress = progress.finalExamPassed || completed >= nextLevelAt
+  const LevelIcon = levelInfo.Icon;
+  const levelAccent = `var(--level-${levelInfo.num}-accent)`;
+  const nextLevel = LEVEL_INFO.find(l => l.min === levelInfo.next);
+  const levelProgress = progress.finalExamPassed || completed >= levelInfo.next
     ? 100
-    : Math.round(((completed - levelInfo.min) / (nextLevelAt - levelInfo.min)) * 100);
+    : Math.round(((completed - levelInfo.min) / (levelInfo.next - levelInfo.min)) * 100);
 
   function isModuleUnlocked(moduleId: number): boolean {
     const mod = modulesData.find(m => m.id === moduleId);
@@ -75,59 +108,72 @@ export function MainMenu() {
   const finalUnlocked = modulesData.every(m => progress.examsPassed.includes(m.examId));
   const bestWPM = progress.lessonStats.reduce((max, s) => Math.max(max, s.bestWPM), 0);
 
+  // Hata tuşları özeti (istatistik paneli için StatsChart'a gidiyor zaten)
+  const finalIdx = modulesData.length; // final sınavı düğüm indeksi
+  const finalY = nodeY(finalIdx);
+  const mapHeight = finalY + 300;
+
+  // Aktif (frontier) modül: kilidi açık ama sınavı geçilmemiş ilk modül
+  const activeModuleIdx = modulesData.findIndex(
+    m => isModuleUnlocked(m.id) && !progress.examsPassed.includes(m.examId),
+  );
+  // Tamamlanan yol: son geçilen sınava kadar cyan çizgi
+  const completedUpTo = modulesData.filter(m => progress.examsPassed.includes(m.examId)).length;
+
   return (
     <>
     {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     {showNotes && <TeacherNotesModal onClose={() => setShowNotes(false)} />}
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white overflow-auto">
-      {/* Header with level */}
-      <div
-        className={`bg-gradient-to-br ${isLight ? levelInfo.colorLight : levelInfo.color} p-6 shadow-xl`}
-        style={{ borderBottom: `1px solid ${levelInfo.accent}33` }}
+    <div className="flex flex-col min-h-screen bg-base text-primary overflow-auto pb-12">
+
+      {/* ══ HEADER — seviye kimliği ══ */}
+      <header
+        className="relative overflow-hidden px-8 pt-6 pb-5"
+        style={{ background: `var(--level-${levelInfo.num}-gradient)`, borderBottom: `1px solid color-mix(in srgb, ${levelAccent} 30%, var(--bg-border))` }}
       >
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: isLight ? '#111827' : '#F9FAFB' }}>
-              ⌨️ Arduino Typing Tutor
-            </h1>
-            <p className="text-sm mt-0.5" style={{ color: isLight ? `${levelInfo.accent}CC` : 'rgba(255,255,255,0.4)' }}>
-              10 parmak yazarak Arduino öğren!
-            </p>
+        <div
+          className="absolute pointer-events-none"
+          style={{ top: -80, right: 120, width: 320, height: 320, borderRadius: '50%',
+            background: `radial-gradient(circle, color-mix(in srgb, ${levelAccent} 14%, transparent) 0%, transparent 70%)` }}
+        />
+        <div className="flex items-center gap-4 max-w-5xl mx-auto relative">
+          <div
+            className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #164E63, var(--accent-cyan-deep))', boxShadow: '0 0 24px rgba(34,211,238,.35), inset 0 1px 0 rgba(255,255,255,.15)' }}
+          >
+            <KeyboardIcon size={28} color="#67E8F9" strokeWidth={2.2} />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div
-                className="text-base font-semibold px-3 py-1 rounded-full border"
-                style={{ color: levelInfo.accent, borderColor: `${levelInfo.accent}50`, backgroundColor: `${levelInfo.accent}18` }}
-              >
-                {levelInfo.label}
-              </div>
-              <div className="text-xs mt-1 text-center" style={{ color: isLight ? '#6B7280' : 'rgba(255,255,255,0.4)' }}>
-                {Math.min(completed, totalLessons)}/{totalLessons} ders
-              </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="m-0 text-2xl font-black tracking-tight">Arduino Typing Tutor</h1>
+              <Chip color={levelAccent} size="sm">
+                <LevelIcon size={14} strokeWidth={2.4} />
+                Seviye {levelInfo.num} · {levelInfo.name}
+              </Chip>
             </div>
+            <p className="m-0 mt-1 text-secondary text-sm font-semibold">10 parmak yazarak Arduino öğren!</p>
+          </div>
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setScreen('parent-panel')}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-colors"
-              style={{ backgroundColor: `${levelInfo.accent}18`, border: `1px solid ${levelInfo.accent}40` }}
               title="Ebeveyn Paneli"
+              className="w-11 h-11 rounded-[14px] bg-elevated border border-border text-secondary hover:text-primary cursor-pointer flex items-center justify-center transition-colors"
             >
-              👨‍👩‍👧
+              <Users size={20} strokeWidth={2.2} />
             </button>
             <button
               onClick={() => setShowSettings(true)}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-colors"
-              style={{ backgroundColor: `${levelInfo.accent}18`, border: `1px solid ${levelInfo.accent}40` }}
               title="Ayarlar"
+              className="w-11 h-11 rounded-[14px] bg-elevated border border-border text-secondary hover:text-primary cursor-pointer flex items-center justify-center transition-colors"
             >
-              ⚙️
+              <Settings size={20} strokeWidth={2.2} />
             </button>
             {activeProfile && (
               <button
                 onClick={() => setScreen('profile-select')}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all hover:scale-110"
-                style={{ backgroundColor: activeProfile.color }}
                 title={`${activeProfile.name} — Profil değiştir`}
+                className="w-11 h-11 rounded-[14px] border-none cursor-pointer flex items-center justify-center text-white font-black text-base transition-transform hover:scale-105"
+                style={{ background: activeProfile.color, boxShadow: `0 0 16px ${activeProfile.color}66` }}
               >
                 {activeProfile.name.charAt(0).toUpperCase()}
               </button>
@@ -135,248 +181,337 @@ export function MainMenu() {
           </div>
         </div>
 
-        {/* Level progress bar */}
-        <div className="max-w-4xl mx-auto mt-4">
-          <div className="flex justify-between text-xs mb-1.5" style={{ color: isLight ? '#9CA3AF' : 'rgba(255,255,255,0.35)' }}>
-            <span>Seviye ilerleme</span>
-            <span>{levelProgress}%</span>
+        {/* Seviye ilerlemesi */}
+        <div className="max-w-5xl mx-auto mt-[18px] flex items-center gap-3.5 relative">
+          <div className="flex-1">
+            <div className="flex justify-between mb-1.5">
+              <span className="text-xs font-extrabold text-secondary uppercase tracking-wider">Seviye ilerlemesi</span>
+              <span className="text-xs font-extrabold" style={{ color: levelAccent }}>
+                {Math.min(completed, totalLessons)}/{totalLessons} ders
+                {nextLevel && levelProgress < 100 && ` · ${nextLevel.name}'na ${levelInfo.next - completed} ders`}
+              </span>
+            </div>
+            <ProgressBar value={levelProgress} height={12} />
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isLight ? `${levelInfo.accent}20` : 'rgba(0,0,0,0.4)' }}>
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${levelProgress}%`, backgroundColor: levelInfo.accent }}
-            />
-          </div>
+          <span className="text-xl font-black" style={{ color: levelAccent }}>%{levelProgress}</span>
         </div>
-      </div>
+      </header>
 
-      {/* Quick stats bar */}
-      <div style={{ backgroundColor: isLight ? '#F3F4F6' : '#111111', borderBottom: isLight ? '1px solid #E5E7EB' : '1px solid #1E1E1F' }}>
-        <div className="max-w-4xl mx-auto flex gap-6 px-6 py-3 text-sm flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">🔥 Seri:</span>
-            <span className="font-semibold text-orange-400">{progress.currentStreak}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">⚡ En iyi WPM:</span>
-            <span className="font-semibold text-blue-400">{bestWPM}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">⏱️ Toplam süre:</span>
-            <span className="font-semibold" style={{ color: isLight ? '#374151' : '#E5E7EB' }}>{formatTime(progress.totalTimeSpent)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">🏅 Rozet:</span>
-            <span className="font-semibold text-yellow-400">{progress.badges.length}</span>
-          </div>
-          <button
-            onClick={() => setShowStats(s => !s)}
-            className="ml-auto text-blue-400 hover:text-blue-300 transition-colors text-xs"
-          >
-            📊 {showStats ? 'Grafikleri Gizle' : 'İstatistikleri Gör'}
-          </button>
+      {/* ══ HIZLI İSTATİSTİK ÇUBUĞU ══ */}
+      <div className="bg-muted border-b border-elevated px-8 py-3.5">
+        <div className="max-w-5xl mx-auto flex items-center gap-2 flex-wrap">
+          {[
+            { Icon: Flame, label: 'Seri', value: `${progress.currentStreak} gün`, color: '#FB923C' },
+            { Icon: Zap, label: 'En iyi WPM', value: String(bestWPM), color: '#FBBF24' },
+            { Icon: Clock, label: 'Toplam süre', value: formatTime(progress.totalTimeSpent), color: 'var(--accent-cyan)' },
+            { Icon: Award, label: 'Rozet', value: String(progress.badges.length), color: '#A78BFA' },
+          ].map(({ Icon, label, value, color }, i) => (
+            <div key={label} className="flex items-center gap-2 px-3.5 py-2">
+              {i > 0 && <div className="w-px h-[22px] bg-border -ml-5 mr-3" />}
+              <Icon size={18} strokeWidth={2.2} style={{ color }} />
+              <span className="text-sm font-bold text-secondary">{label}</span>
+              <span className="text-[17px] font-black" style={{ color }}>{value}</span>
+            </div>
+          ))}
+          <div className="flex-1" />
+          <Button variant="secondary" size="sm" onClick={() => setShowStats(s => !s)} className="!text-accent-cyan-soft">
+            <BarChart3 size={16} strokeWidth={2.4} />
+            {showStats ? 'İstatistikleri Gizle' : 'İstatistikleri Gör'}
+          </Button>
         </div>
 
-        {/* Stats panel */}
         {showStats && (
-          <div className="max-w-4xl mx-auto px-6 pb-6">
-            <StatsChart
-              lessonStats={progress.lessonStats}
-              errorKeys={progress.errorKeys}
-            />
+          <div className="max-w-5xl mx-auto pt-4 pb-2 animate-slide-down">
+            <StatsChart lessonStats={progress.lessonStats} errorKeys={progress.errorKeys} />
           </div>
         )}
       </div>
 
-      <div className="flex-1 p-6 max-w-4xl mx-auto w-full">
-        {/* Badges */}
-        {progress.badges.length > 0 && (
-          <div className="mb-5">
-            <h2 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Rozetlerin</h2>
-            <div className="flex gap-2 flex-wrap">
-              {progress.badges.map(badge => (
-                <span
-                  key={badge}
-                  className="text-xs px-3 py-1.5 rounded-full font-medium"
-                  style={isLight
-                    ? { backgroundColor: '#FEF9C3', border: '1px solid #FDE047', color: '#854D0E' }
-                    : { backgroundColor: 'rgba(120,53,15,0.4)', border: '1px solid rgba(202,138,4,0.6)', color: '#FDE68A' }
-                  }
-                >
-                  {BADGE_LABELS[badge] ?? badge}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Öğretmen notu banner */}
-        {unreadNotes.length > 0 && (
-          <button
-            onClick={() => setShowNotes(true)}
-            className="w-full mb-4 flex items-center justify-between gap-3 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-3 text-left hover:bg-indigo-500/20 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">📬</span>
-              <div>
-                <p className="text-indigo-300 text-sm font-semibold">
-                  Öğretmeninden {unreadNotes.length} yeni not var
-                </p>
-                <p className="text-indigo-400/60 text-xs">Görüntülemek için tıkla</p>
-              </div>
-            </div>
-            <span className="text-indigo-400 text-lg">›</span>
-          </button>
-        )}
-
-        {/* Modules */}
-        <h2 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Modüller</h2>
-        <div className="grid gap-3">
-          {modulesData.map(mod => {
-            const unlocked = isModuleUnlocked(mod.id);
-            const examPassed = progress.examsPassed.includes(mod.examId);
-            const modLessons = lessonsData.filter(l => mod.lessonIds.includes(l.id));
-            const modCompleted = modLessons.filter(l => progress.completedLessons.includes(l.id)).length;
-            const modProgress = modLessons.length > 0 ? (modCompleted / modLessons.length) * 100 : 0;
-
-            return (
-              <div
-                key={mod.id}
-                className={`rounded-xl border p-4 transition-all ${
-                  unlocked
-                    ? 'bg-gray-800 border-gray-700 hover:border-gray-500'
-                    : 'bg-gray-800 border-gray-800 opacity-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{examPassed ? '✅' : unlocked ? '🔓' : '🔒'}</span>
-                    <div>
-                      <h3 className="font-semibold text-sm">Modül {mod.id}: {mod.title}</h3>
-                      <p className="text-xs text-gray-400">{mod.description}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-500">{modCompleted}/{modLessons.length}</span>
-                </div>
-
-                <div className="h-1 bg-gray-700 rounded-full overflow-hidden mb-3">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${examPassed ? 'bg-green-500' : 'bg-blue-500'}`}
-                    style={{ width: `${modProgress}%` }}
-                  />
-                </div>
-
-                {unlocked && (
-                  <div className="flex gap-1.5 flex-wrap">
-                    {modLessons.map(l => {
-                      const done = progress.completedLessons.includes(l.id);
-                      return (
-                        <button
-                          key={l.id}
-                          onClick={() => startLesson(l.id)}
-                          title={l.title}
-                          className={`text-xs px-2.5 py-1 rounded-lg border transition-all font-medium ${
-                            l.isExam
-                              ? done
-                                ? 'bg-green-900/40 border-green-600 text-green-300'
-                                : 'bg-orange-900/40 border-orange-600 text-orange-300 hover:bg-orange-900/60'
-                              : done
-                                ? 'bg-blue-900/30 border-blue-800 text-blue-400 hover:bg-blue-900/50'
-                                : 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600'
-                          }`}
-                        >
-                          {l.isExam ? '📝' : done ? '✓' : ''} {l.isExam ? 'Sınav' : `D${l.id}`}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+      {/* ══ ROZETLER ══ */}
+      <div className="max-w-5xl mx-auto w-full px-8 pt-6">
+        <div className="text-xs font-black tracking-[1.5px] uppercase text-subtle mb-2.5">
+          Rozetlerin · {progress.badges.length}/{BADGE_DEFS.length}
+        </div>
+        <div className="flex flex-wrap gap-2.5">
+          {BADGE_DEFS.map(({ id, label, color, Icon }) => {
+            const earned = progress.badges.includes(id);
+            return earned ? (
+              <Chip key={id} color={color}><Icon size={15} strokeWidth={2.2} />{label}</Chip>
+            ) : (
+              <Chip key={id} dashed><Lock size={14} strokeWidth={2.2} />{label}</Chip>
             );
           })}
+        </div>
+      </div>
 
-          {/* Final exam card */}
-          <div className={`rounded-xl border p-4 transition-all ${
-            finalUnlocked
-              ? ''
-              : 'bg-gray-800 border-gray-800 opacity-50'
-          }`}
-          style={finalUnlocked ? {
-            background: isLight
-              ? 'linear-gradient(to right, #FEF9C3, #FEF3C7)'
-              : 'linear-gradient(to right, rgba(120,53,15,0.3), rgba(124,45,18,0.3))',
-            border: isLight ? '1px solid #FDE047' : '1px solid #CA8A04'
-          } : undefined}
+      {/* ══ ÖĞRETMEN NOTU BANNER ══ */}
+      {unreadNotes.length > 0 && (
+        <div className="max-w-5xl mx-auto w-full px-8 mt-[18px]">
+          <div
+            className="flex items-center gap-3.5 rounded-panel px-[18px] py-3.5"
+            style={{ background: 'linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 10%, transparent), color-mix(in srgb, var(--accent-cyan) 3%, transparent))', border: '1px solid color-mix(in srgb, var(--accent-cyan) 35%, transparent)' }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{progress.finalExamPassed ? '🏆' : finalUnlocked ? '⭐' : '🔒'}</span>
-                <div>
-                  <h3 className="font-semibold" style={{ color: isLight ? '#92400E' : '#FDE68A' }}>Final Sınavı</h3>
-                  <p className="text-xs text-gray-400">
-                    {progress.finalExamPassed
-                      ? 'Sertifikayı kazandın!'
-                      : '5 dk · %95 doğruluk · 20 WPM · 3 hak'}
-                  </p>
-                </div>
+            <div
+              className="w-10 h-10 rounded-control flex items-center justify-center animate-floaty flex-shrink-0"
+              style={{ background: 'color-mix(in srgb, var(--accent-cyan) 15%, transparent)' }}
+            >
+              <Mail size={20} strokeWidth={2.2} style={{ color: 'var(--accent-cyan)' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[14.5px] font-extrabold text-primary">
+                Öğretmeninden {unreadNotes.length} yeni not var
               </div>
-              <div className="flex gap-2">
-                {finalUnlocked && !progress.finalExamPassed && (
-                  <button
-                    onClick={() => startLesson(47)}
-                    className="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
-                  >
-                    Başla →
-                  </button>
+              <div className="text-[13px] font-semibold text-secondary truncate">
+                {unreadNotes[0]?.content ? `"${unreadNotes[0].content}"` : 'Görüntülemek için tıkla'}
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setShowNotes(true)}>Oku</Button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ ÖĞRENME HARİTASI ══ */}
+      <div className="max-w-5xl mx-auto w-full px-8 pt-[26px]">
+        <div className="text-xs font-black tracking-[1.5px] uppercase text-subtle mb-1">Öğrenme Haritası</div>
+      </div>
+      <div className="mx-auto relative" style={{ width: MAP_W, height: mapHeight }}>
+        {/* Yol */}
+        <svg width={MAP_W} height={mapHeight} viewBox={`0 0 ${MAP_W} ${mapHeight}`} className="absolute inset-0" fill="none">
+          <path d={buildFullTrack(modulesData.length, finalY)} stroke="var(--bg-border)" strokeWidth="5" strokeLinecap="round" strokeDasharray="2 14" />
+          {completedUpTo > 0 && (
+            <path
+              d={completedUpTo >= modulesData.length
+                ? buildFullTrack(modulesData.length, finalY)
+                : buildPath(0, completedUpTo)}
+              stroke="var(--accent-cyan)" strokeWidth="5" strokeLinecap="round"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,.6))' }}
+            />
+          )}
+        </svg>
+
+        {modulesData.map((mod, i) => {
+          const unlocked = isModuleUnlocked(mod.id);
+          const examPassed = progress.examsPassed.includes(mod.examId);
+          const isActive = i === activeModuleIdx;
+          const modLessons = lessonsData.filter(l => mod.lessonIds.includes(l.id));
+          const exam = lessonsData.find(l => l.id === mod.examId);
+          const modCompleted = modLessons.filter(l => progress.completedLessons.includes(l.id)).length;
+          const modProgress = modLessons.length > 0 ? (modCompleted / modLessons.length) * 100 : 0;
+          const nx = nodeX(i);
+          const ny = nodeY(i);
+          const cardLeft = nx === NODE_XS[0] ? nx + 70 : nx - 70 - CARD_W;
+          const nextUncompleted = modLessons.find(l => !progress.completedLessons.includes(l.id));
+          const prevMod = modulesData[i - 1];
+
+          return (
+            <div key={mod.id}>
+              {/* Düğüm */}
+              <div
+                className={`absolute rounded-full flex items-center justify-center z-[2] ${isActive ? 'animate-glow-pulse' : ''}`}
+                style={{
+                  left: nx - 36, top: ny - 36, width: 72, height: 72,
+                  background: examPassed
+                    ? 'linear-gradient(135deg, #365314, #4D7C0F)'
+                    : isActive
+                      ? 'linear-gradient(135deg, #155E75, var(--accent-cyan-deep))'
+                      : 'var(--bg-surface)',
+                  border: `3px solid ${examPassed ? 'var(--accent-lime)' : isActive ? 'var(--accent-cyan)' : 'var(--bg-border)'}`,
+                  boxShadow: examPassed ? '0 0 20px rgba(163,230,53,.35)' : undefined,
+                }}
+              >
+                {examPassed ? (
+                  <Check size={30} color="#A3E635" strokeWidth={3} />
+                ) : isActive ? (
+                  <span className="text-2xl font-black" style={{ color: '#A5F3FC' }}>{mod.id}</span>
+                ) : (
+                  <Lock size={22} strokeWidth={2.2} className="text-subtle" />
                 )}
-                {progress.finalExamPassed && (
-                  <button
-                    onClick={() => setScreen('certificate')}
-                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
-                  >
-                    Sertifikam 🎓
-                  </button>
+              </div>
+
+              {/* Kart */}
+              <div
+                className="absolute rounded-card p-[18px] px-5"
+                style={{
+                  left: cardLeft, top: ny - 80, width: CARD_W,
+                  background: isActive ? 'color-mix(in srgb, var(--accent-cyan) 4%, var(--bg-surface))' : unlocked ? 'var(--bg-surface)' : 'var(--bg-muted)',
+                  border: isActive
+                    ? '2px solid color-mix(in srgb, var(--accent-cyan) 50%, transparent)'
+                    : examPassed
+                      ? '1px solid color-mix(in srgb, var(--accent-lime) 30%, var(--bg-border))'
+                      : '1px solid var(--bg-border)',
+                  boxShadow: isActive ? '0 0 32px rgba(34,211,238,.12), var(--shadow-card)' : 'var(--shadow-card)',
+                  opacity: unlocked ? 1 : 0.62,
+                }}
+              >
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[17px] font-black ${unlocked ? 'text-primary' : 'text-secondary'}`}>
+                        Modül {mod.id} · {mod.title}
+                      </span>
+                      {isActive && (
+                        <span
+                          className="text-[11px] font-black uppercase tracking-wider rounded-full px-2.5 py-0.5"
+                          style={{ background: 'var(--accent-cyan)', color: 'var(--on-cyan)' }}
+                        >
+                          Buradasın
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[13px] font-semibold text-secondary mt-0.5">{mod.description}</div>
+                  </div>
+                  {unlocked ? (
+                    <Chip size="sm" color={examPassed ? 'var(--accent-lime)' : 'var(--accent-cyan)'}>
+                      {examPassed && <Check size={13} strokeWidth={3} />}
+                      {modCompleted}/{modLessons.length}
+                    </Chip>
+                  ) : (
+                    <Chip size="sm" dashed>{modLessons.length} ders</Chip>
+                  )}
+                </div>
+
+                {unlocked ? (
+                  <>
+                    <div className="my-3">
+                      <ProgressBar
+                        value={modProgress} height={8} glow={!examPassed}
+                        color={examPassed ? 'var(--accent-lime)' : undefined}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-[7px]">
+                      {modLessons.map(l => {
+                        const done = progress.completedLessons.includes(l.id);
+                        const isNext = nextUncompleted?.id === l.id;
+                        return (
+                          <button
+                            key={l.id}
+                            onClick={() => startLesson(l.id)}
+                            title={l.title}
+                            className="font-mono text-xs font-extrabold rounded-lg px-2.5 py-[5px] cursor-pointer transition-all hover:brightness-110"
+                            style={
+                              isNext
+                                ? { background: 'var(--accent-cyan)', border: '1px solid var(--accent-cyan)', color: 'var(--on-cyan)', boxShadow: '0 0 12px rgba(34,211,238,.5)' }
+                                : done
+                                  ? { background: 'color-mix(in srgb, var(--accent-lime) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-lime) 30%, transparent)', color: 'var(--accent-lime)' }
+                                  : { background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)', color: 'var(--text-muted)' }
+                            }
+                          >
+                            {isNext ? <Play size={9} className="inline -mt-0.5 mr-0.5" fill="currentColor" /> : done ? '✓' : ''}D{l.id}
+                          </button>
+                        );
+                      })}
+                      {exam && (
+                        <button
+                          onClick={() => startLesson(exam.id)}
+                          title={exam.title}
+                          className="text-xs font-extrabold rounded-lg px-2.5 py-[5px] cursor-pointer transition-all hover:brightness-110"
+                          style={
+                            examPassed
+                              ? { background: 'color-mix(in srgb, var(--accent-lime) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-lime) 40%, transparent)', color: 'var(--accent-lime)' }
+                              : { background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)', border: '1px dashed color-mix(in srgb, var(--accent-orange) 50%, transparent)', color: 'var(--accent-orange)' }
+                          }
+                        >
+                          Sınav {examPassed ? '✓' : ''}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs font-bold text-subtle mt-2 flex items-center gap-1.5">
+                    <Lock size={12} strokeWidth={2.4} />
+                    {prevMod ? `Modül ${prevMod.id} sınavını geç` : 'Kilitli'}
+                  </div>
                 )}
               </div>
             </div>
+          );
+        })}
+
+        {/* Final Sınavı düğümü */}
+        <div
+          className="absolute rounded-full flex items-center justify-center z-[2]"
+          style={{
+            left: MAP_W / 2 - 40, top: finalY - 40, width: 80, height: 80,
+            background: finalUnlocked ? 'linear-gradient(135deg, #92400E, #B45309)' : 'var(--bg-surface)',
+            border: `3px solid ${finalUnlocked ? 'var(--accent-amber)' : 'var(--bg-border)'}`,
+            boxShadow: finalUnlocked ? '0 0 28px rgba(251,191,36,.3)' : undefined,
+          }}
+        >
+          {finalUnlocked
+            ? <Trophy size={34} color="#FDE68A" strokeWidth={2.2} />
+            : <Lock size={26} strokeWidth={2.2} className="text-subtle" />}
+        </div>
+        <div
+          className="absolute rounded-card p-5 px-[22px]"
+          style={{
+            left: MAP_W / 2 - CARD_W / 2, top: finalY + 58, width: CARD_W,
+            background: finalUnlocked ? 'linear-gradient(140deg, #1C1608, #201A0B 60%, #17130A)' : 'var(--bg-muted)',
+            border: finalUnlocked ? '2px solid rgba(251,191,36,.5)' : '1px solid var(--bg-border)',
+            boxShadow: finalUnlocked ? '0 0 36px rgba(251,191,36,.12)' : undefined,
+            opacity: finalUnlocked ? 1 : 0.62,
+          }}
+        >
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-lg font-black" style={{ color: finalUnlocked ? '#FDE68A' : 'var(--text-secondary)' }}>Final Sınavı</span>
+            <span
+              className="text-[11px] font-black tracking-wider uppercase rounded-full px-2.5 py-0.5"
+              style={{ color: '#78350F', background: 'linear-gradient(90deg, #FBBF24, #FDE68A)' }}
+            >
+              Sertifika
+            </span>
+          </div>
+          <div className="text-[13.5px] font-semibold mt-1.5" style={{ color: finalUnlocked ? '#D6C08A' : 'var(--text-muted)' }}>
+            {progress.finalExamPassed ? 'Sertifikayı kazandın! 🎉' : 'Tüm modülleri bitir, sertifikanı kazan!'}
+          </div>
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            {['5 dk', '%95 doğruluk', '20 WPM', '3 hak'].map(t => (
+              <span
+                key={t}
+                className="text-xs font-extrabold rounded-lg px-2.5 py-[5px]"
+                style={{ color: finalUnlocked ? '#FDE68A' : 'var(--text-muted)', background: finalUnlocked ? 'rgba(251,191,36,.1)' : 'var(--bg-elevated)', border: finalUnlocked ? '1px solid rgba(251,191,36,.3)' : '1px solid var(--bg-border)' }}
+              >
+                {t}
+              </span>
+            ))}
+            <div className="flex-1" />
+            {finalUnlocked && !progress.finalExamPassed && (
+              <Button variant="gold" size="sm" onClick={() => startLesson(47)}>Başla →</Button>
+            )}
+            {progress.finalExamPassed && (
+              <Button variant="gold" size="sm" onClick={() => setScreen('certificate')}>
+                <GraduationCap size={15} strokeWidth={2.4} /> Sertifikam
+              </Button>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Overall progress */}
-        <div className="mt-4 rounded-xl p-4" style={{
-          backgroundColor: isLight ? '#FFFFFF' : '#1A1A1B',
-          border: isLight ? '1px solid #E5E7EB' : '1px solid #2E2E2F'
-        }}>
-          <div className="flex justify-between text-sm mb-2">
-            <span style={{ color: isLight ? '#6B7280' : '#9A9A9E' }}>Genel İlerleme</span>
-            <span className="font-semibold" style={{ color: isLight ? '#111827' : '#F9FAFB' }}>{overallProgress}%</span>
+      {/* ══ GENEL İLERLEME + SIFIRLA ══ */}
+      <div className="max-w-5xl mx-auto w-full px-8 mt-7">
+        <div className="bg-surface border border-border rounded-card px-[22px] py-[18px] flex items-center gap-[18px]">
+          <div className="flex-1">
+            <div className="text-sm font-extrabold text-primary mb-2 flex items-center gap-2">
+              <CheckCircle2 size={16} strokeWidth={2.4} style={{ color: 'var(--accent-lime)' }} />
+              Genel ilerleme · {completed}/{totalLessons} ders tamamlandı
+            </div>
+            <ProgressBar value={overallProgress} height={10} color="linear-gradient(90deg, var(--accent-cyan), var(--accent-lime))" glow={false} />
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isLight ? '#E5E7EB' : '#2E2E2F' }}>
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${overallProgress}%`, backgroundColor: levelInfo.accent }}
-            />
-          </div>
+          <span className="text-2xl font-black" style={{ color: 'var(--accent-lime)' }}>%{overallProgress}</span>
         </div>
 
-        {/* Reset */}
-        <div className="mt-6 text-center">
+        <div className="text-center mt-5">
           {!showReset ? (
             <button
               onClick={() => setShowReset(true)}
-              className="text-xs text-gray-600 hover:text-gray-500 transition-colors"
+              className="bg-transparent border-none text-subtle text-xs font-bold cursor-pointer underline underline-offset-[3px] hover:text-accent-red transition-colors"
             >
               İlerlemeyi sıfırla
             </button>
           ) : (
-            <div className="flex items-center gap-2 justify-center">
-              <span className="text-sm text-red-400">Emin misin? Geri alınamaz!</span>
-              <button onClick={reset} className="text-sm bg-red-700 hover:bg-red-600 px-3 py-1 rounded-lg transition-colors">
-                Evet, sıfırla
-              </button>
-              <button onClick={() => setShowReset(false)} className="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg transition-colors">
-                İptal
-              </button>
+            <div className="inline-flex items-center gap-2.5 animate-fade-in">
+              <span className="text-sm font-bold text-accent-red">Emin misin? Geri alınamaz!</span>
+              <Button variant="destructive" size="sm" onClick={reset}>Evet, sıfırla</Button>
+              <Button variant="secondary" size="sm" onClick={() => setShowReset(false)}>İptal</Button>
             </div>
           )}
         </div>
