@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { ArrowRight, BarChart3, Check, Clock, Flame, Home, RotateCcw, Target, XCircle, Zap } from 'lucide-react';
 import { useProgressStore } from '../store/progressStore';
 import { useConfetti } from '../hooks/useConfetti';
 import { BadgeNotification } from './BadgeNotification';
 import { StatsChart } from './StatsChart';
+import { Button, Chip, Kbd } from './ui';
 import lessonsData from '../data/lessons.json';
 import modulesData from '../data/modules.json';
 
@@ -10,6 +12,37 @@ function formatTime(s: number): string {
   const m = Math.floor(s / 60);
   const sec = s % 60;
   return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  value: string | number;
+  label: string;
+  color: string;
+  hint?: string;
+  hintOk?: boolean;
+  delay: number;
+  highlight?: boolean;
+}
+
+function StatCard({ icon, value, label, color, hint, hintOk, delay, highlight }: StatCardProps) {
+  return (
+    <div
+      className="bg-surface rounded-card p-5 text-center animate-pop-in"
+      style={{
+        width: 180,
+        border: highlight ? `1px solid color-mix(in srgb, ${color} 40%, transparent)` : '1px solid var(--bg-border)',
+        animationDelay: `${delay}ms`,
+      }}
+    >
+      <div className="flex justify-center mb-1.5">{icon}</div>
+      <div className="text-[38px] font-black tabular-nums leading-tight" style={{ color }}>{value}</div>
+      <div className="text-xs font-black tracking-[1.5px] uppercase text-subtle">{label}</div>
+      <div className="text-[11.5px] font-bold mt-1" style={{ color: hint ? (hintOk ? 'var(--accent-lime)' : 'var(--accent-red)') : 'transparent' }}>
+        {hint ?? ' '}
+      </div>
+    </div>
+  );
 }
 
 export function ResultScreen() {
@@ -64,20 +97,20 @@ export function ResultScreen() {
 
   if (!lastResult) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-        <button onClick={() => setScreen('menu')} className="text-blue-400 underline">
-          Ana Menü'ye dön
-        </button>
+      <div className="flex items-center justify-center h-screen bg-base text-primary">
+        <Button variant="ghost" onClick={() => setScreen('menu')}>Ana Menü'ye dön</Button>
       </div>
     );
   }
 
   const module = lesson ? modulesData.find(m => m.id === lesson.moduleId) : null;
+  const passed = lastResult.passed;
 
   const accuracyColor = lastResult.accuracy >= 90
-    ? 'text-green-400' : lastResult.accuracy >= 75
-    ? 'text-yellow-400' : 'text-red-400';
-  const wpmColor = lastResult.wpm >= 30 ? 'text-green-400' : 'text-blue-400';
+    ? 'var(--accent-lime)' : lastResult.accuracy >= 75
+    ? 'var(--accent-amber)' : 'var(--accent-red)';
+  const wpmColor = lastResult.wpm >= 30 ? 'var(--accent-lime)' : 'var(--accent-cyan)';
+  const heroColor = passed ? 'var(--accent-lime)' : 'var(--accent-orange)';
 
   const newBadgesForDisplay = badgesDone ? [] : progress.newlyEarnedBadges;
 
@@ -87,124 +120,97 @@ export function ResultScreen() {
         <BadgeNotification badges={newBadgesForDisplay} onDone={handleBadgesDone} />
       )}
 
-      <div className="flex flex-col items-center justify-center min-h-screen text-white p-8 gap-5 screen-bg">
-        {/* Result icon */}
-        <div className={`text-6xl ${lastResult.passed ? 'animate-bounce' : ''}`}>
-          {lastResult.passed ? '🎉' : '💪'}
-        </div>
-
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-1">
-            {lastResult.passed ? 'Harika! Geçtin!' : 'Tekrar Dene!'}
+      <div className="flex flex-col items-center justify-center min-h-screen text-primary p-6 screen-bg">
+        {/* Hero */}
+        <div className="text-center animate-pop-in">
+          <div
+            className={`w-[88px] h-[88px] mx-auto mb-3.5 rounded-full flex items-center justify-center ${passed ? 'animate-glow-pulse' : ''}`}
+            style={{
+              background: `color-mix(in srgb, ${heroColor} 12%, transparent)`,
+              border: `3px solid ${heroColor}`,
+            }}
+          >
+            {passed
+              ? <Check size={44} strokeWidth={3} style={{ color: heroColor }} />
+              : <RotateCcw size={40} strokeWidth={2.6} style={{ color: heroColor }} />}
+          </div>
+          <h1 className="m-0 text-[40px] font-black tracking-tight" style={{ color: heroColor }}>
+            {passed ? 'Geçtin!' : 'Neredeyse!'}
           </h1>
-          <p className="text-gray-400 text-sm">
-            {lesson?.title}
-            {module ? ` — ${module.title}` : ''}
+          <p className="m-0 mt-1.5 text-base font-bold text-secondary">
+            {passed
+              ? `${lesson?.title ?? ''}${module ? ` · ${module.title}` : ''} tamamlandı`
+              : 'Hedefe çok yaklaştın — bir tur daha deneyelim'}
           </p>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-4 gap-3 w-full max-w-md">
-          <div className="rounded-xl p-4 text-center col-span-1" style={{ backgroundColor: '#1A1A1B', border: '1px solid #2E2E2F' }}>
-            <div className={`text-3xl font-bold ${wpmColor}`}>{lastResult.wpm}</div>
-            <div className="text-xs text-gray-400 mt-1">WPM</div>
-          </div>
-          <div className="rounded-xl p-4 text-center col-span-1" style={{ backgroundColor: '#1A1A1B', border: '1px solid #2E2E2F' }}>
-            <div className={`text-3xl font-bold ${accuracyColor}`}>{lastResult.accuracy}%</div>
-            <div className="text-xs text-gray-400 mt-1">Doğruluk</div>
-          </div>
-          <div className="rounded-xl p-4 text-center col-span-1" style={{ backgroundColor: '#1A1A1B', border: '1px solid #2E2E2F' }}>
-            <div className="text-3xl font-bold text-gray-200">{formatTime(lastResult.timeSpent)}</div>
-            <div className="text-xs text-gray-400 mt-1">Süre</div>
-          </div>
-          <div className="rounded-xl p-4 text-center col-span-1" style={{ backgroundColor: '#1A1A1B', border: '1px solid #2E2E2F' }}>
-            <div className="text-3xl font-bold text-red-400">{lastResult.errors}</div>
-            <div className="text-xs text-gray-400 mt-1">Hata</div>
-          </div>
+        {/* Stat kartları */}
+        <div className="flex gap-3.5 mt-7 flex-wrap justify-center">
+          <StatCard
+            icon={<Zap size={22} strokeWidth={2.2} style={{ color: wpmColor }} />}
+            value={lastResult.wpm} label="WPM" color={wpmColor} delay={100}
+            hint={lesson?.minWPM ? `hedef ${lesson.minWPM} ${lastResult.wpm >= lesson.minWPM ? '✓' : '✗'}` : undefined}
+            hintOk={lesson?.minWPM ? lastResult.wpm >= lesson.minWPM : undefined}
+            highlight={lesson?.minWPM ? lastResult.wpm >= lesson.minWPM : false}
+          />
+          <StatCard
+            icon={<Target size={22} strokeWidth={2.2} style={{ color: accuracyColor }} />}
+            value={`%${lastResult.accuracy}`} label="Doğruluk" color={accuracyColor} delay={180}
+            hint={lesson ? `hedef %${lesson.minAccuracy} ${lastResult.accuracy >= lesson.minAccuracy ? '✓' : '✗'}` : undefined}
+            hintOk={lesson ? lastResult.accuracy >= lesson.minAccuracy : undefined}
+            highlight={lesson ? lastResult.accuracy >= lesson.minAccuracy : false}
+          />
+          <StatCard
+            icon={<Clock size={22} strokeWidth={2.2} style={{ color: 'var(--accent-cyan)' }} />}
+            value={formatTime(lastResult.timeSpent)} label="Süre" color="var(--accent-cyan)" delay={260}
+          />
+          <StatCard
+            icon={<XCircle size={22} strokeWidth={2.2} style={{ color: 'var(--accent-red)' }} />}
+            value={lastResult.errors} label="Hata" color="var(--accent-red)" delay={340}
+          />
         </div>
 
-        {/* Streak */}
-        {lastResult.passed && progress.currentStreak > 1 && (
-          <div className="flex items-center gap-2 bg-orange-900/40 border border-orange-600 rounded-xl px-4 py-2">
-            <span className="text-xl">🔥</span>
-            <span className="text-orange-300 font-semibold">
-              {progress.currentStreak} ders üst üste!
-            </span>
+        {/* Seri şeridi */}
+        {passed && progress.currentStreak > 1 && (
+          <div className="mt-[22px] animate-pop-in" style={{ animationDelay: '400ms' }}>
+            <Chip color="var(--accent-orange)">
+              <Flame size={15} strokeWidth={2.4} />
+              Seri {progress.currentStreak}. ders!
+            </Chip>
           </div>
         )}
 
-        {/* Pass criteria (only shown on fail) */}
-        {!lastResult.passed && lesson && (
-          <div className="bg-yellow-900/30 border border-yellow-600 rounded-xl p-4 text-sm w-full max-w-md">
-            <p className="text-yellow-300 font-semibold mb-2">Geçmek için:</p>
-            <div className="flex flex-col gap-1">
-              <div className={`flex justify-between ${lastResult.accuracy >= lesson.minAccuracy ? 'text-green-400' : 'text-red-400'}`}>
-                <span>Doğruluk</span>
-                <span>{lastResult.accuracy}% / min %{lesson.minAccuracy}</span>
-              </div>
-              {lesson.minWPM && (
-                <div className={`flex justify-between ${lastResult.wpm >= lesson.minWPM ? 'text-green-400' : 'text-red-400'}`}>
-                  <span>Hız</span>
-                  <span>{lastResult.wpm} / min {lesson.minWPM} WPM</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Klavye kısayol ipucu */}
-        <div className="text-xs text-gray-600 text-center">
-          Klavye kısayolları: <span className="text-gray-500 font-mono">[R]</span> Tekrar &nbsp;
-          {lastResult.passed && nextLesson && <><span className="text-gray-500 font-mono">[Enter]</span> Sonraki &nbsp;</>}
-          <span className="text-gray-500 font-mono">[M]</span> Menü &nbsp;
-          <span className="text-gray-500 font-mono">[G]</span> Grafik
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 flex-wrap justify-center">
+        {/* Aksiyonlar */}
+        <div className="flex items-center gap-3 mt-[26px] flex-wrap justify-center animate-pop-in" style={{ animationDelay: '480ms' }}>
           {lesson && (
-            <button
-              onClick={() => startLesson(lesson.id)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex flex-col items-center"
-            >
-              <span>🔄 Tekrar {lastResult.passed ? 'Oyna' : 'Dene'}</span>
-              <span className="text-xs opacity-60 mt-0.5 font-mono">[R]</span>
-            </button>
+            <Button variant="secondary" onClick={() => startLesson(lesson.id)}>
+              <RotateCcw size={16} strokeWidth={2.4} />
+              Tekrar {passed ? 'Oyna' : 'Dene'}
+              <Kbd>R</Kbd>
+            </Button>
           )}
-          {lastResult.passed && nextLesson && (
-            <button
-              onClick={() => startLesson(nextLesson.id)}
-              className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex flex-col items-center"
-            >
-              <span>Sonraki Ders →</span>
-              <span className="text-xs opacity-60 mt-0.5 font-mono">[Enter]</span>
-            </button>
+          {passed && nextLesson && (
+            <Button size="lg" onClick={() => startLesson(nextLesson.id)}>
+              Sonraki Ders
+              <ArrowRight size={17} strokeWidth={2.8} />
+              <Kbd inverted>⏎</Kbd>
+            </Button>
           )}
-          <button
-            onClick={() => setScreen('menu')}
-            className="text-white px-6 py-3 rounded-xl font-semibold transition-colors flex flex-col items-center"
-            style={{ backgroundColor: '#242425' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#2E2E2F')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#242425')}
-          >
-            <span>🏠 Ana Menü</span>
-            <span className="text-xs opacity-60 mt-0.5 font-mono">[M]</span>
-          </button>
-          <button
-            onClick={() => setShowStats(s => !s)}
-            className="text-white px-6 py-3 rounded-xl font-semibold transition-colors flex flex-col items-center"
-            style={{ backgroundColor: '#242425' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#2E2E2F')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#242425')}
-          >
-            <span>📊 {showStats ? 'Grafikleri Gizle' : 'Grafikleri Gör'}</span>
-            <span className="text-xs opacity-60 mt-0.5 font-mono">[G]</span>
-          </button>
+          <Button variant="secondary" onClick={() => setScreen('menu')}>
+            <Home size={16} strokeWidth={2.4} />
+            Menü
+            <Kbd>M</Kbd>
+          </Button>
+          <Button variant="ghost" onClick={() => setShowStats(s => !s)}>
+            <BarChart3 size={16} strokeWidth={2.4} />
+            {showStats ? 'Grafikleri Gizle' : 'Grafikler'}
+            <Kbd>G</Kbd>
+          </Button>
         </div>
 
-        {/* Charts panel */}
+        {/* Grafik paneli */}
         {showStats && (
-          <div className="w-full max-w-2xl rounded-2xl p-6" style={{ backgroundColor: '#1A1A1B', border: '1px solid #2E2E2F' }}>
+          <div className="w-full max-w-2xl bg-surface border border-border rounded-card p-6 mt-6 animate-slide-up">
             <StatsChart
               lessonStats={progress.lessonStats}
               errorKeys={progress.errorKeys}
