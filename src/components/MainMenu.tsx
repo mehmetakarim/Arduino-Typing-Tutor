@@ -145,7 +145,7 @@ export function MainMenu() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="m-0 text-2xl font-black tracking-tight">Arduino Typing Tutor</h1>
+              <h1 className="m-0 text-2xl font-black tracking-tight">Volti</h1>
               <Chip color={levelAccent} size="sm">
                 <LevelIcon size={14} strokeWidth={2.4} />
                 Seviye {levelInfo.num} · {levelInfo.name}

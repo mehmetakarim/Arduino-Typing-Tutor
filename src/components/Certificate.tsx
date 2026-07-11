@@ -84,7 +84,7 @@ export function Certificate() {
             </div>
 
             <div className="text-xs font-extrabold uppercase" style={{ letterSpacing: 4, color: goldMuted }}>
-              Arduino Typing Tutor
+              Volti · Arduino Typing Tutor
             </div>
             <h1 className="m-0 mt-2.5 text-[32px] font-black" style={{ letterSpacing: 1, color: goldSoft }}>
               Başarı Sertifikası

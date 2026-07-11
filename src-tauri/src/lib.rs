@@ -16,7 +16,7 @@ pub fn run() {
         .setup(|app| {
             let mut builder =
                 WebviewWindowBuilder::new(app, "main", WebviewUrl::App("/".into()))
-                    .title("Arduino Typing Tutor")
+                    .title("Volti")
                     .inner_size(1200.0, 800.0)
                     .min_inner_size(1024.0, 700.0)
                     .maximized(true)

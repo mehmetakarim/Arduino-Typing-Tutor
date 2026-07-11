@@ -74,7 +74,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
 
       {/* Uygulama bilgisi */}
       <div className="py-3 border-b border-border">
-        <p className="m-0 text-xs font-semibold text-subtle">Arduino Typing Tutor</p>
+        <p className="m-0 text-xs font-semibold text-subtle">Volti — Arduino Typing Tutor</p>
         <p className="m-0 text-xs font-semibold text-subtle opacity-70">Tauri v2 + React + TypeScript</p>
       </div>
 

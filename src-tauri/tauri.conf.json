@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Arduino Typing Tutor",
+  "productName": "Volti",
   "version": "0.8.6",
   "identifier": "com.mehmetakar.arduinotypingtutor",
   "build": {
