@@ -52,7 +52,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Arduino Typing Tutor ${{ github.ref_name }}'
+          releaseName: 'Volti ${{ github.ref_name }}'
           releaseBody: |
             ## Kurulum
 
@@ -77,13 +77,13 @@ jobs:
           PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
           BUNDLE_DIR="src-tauri/target/aarch64-apple-darwin/release/bundle/macos"
-          TAR_GZ="${BUNDLE_DIR}/Arduino Typing Tutor.app.tar.gz"
+          TAR_GZ="${BUNDLE_DIR}/Volti.app.tar.gz"
           SIG_FILE="${TAR_GZ}.sig"
 
           # .app.tar.gz yoksa oluştur (genellikle tauri-action üretir)
           if [ ! -f "$TAR_GZ" ]; then
             echo "tar.gz bulunamadı, oluşturuluyor..."
-            tar -czf "$TAR_GZ" -C "$BUNDLE_DIR" "Arduino Typing Tutor.app"
+            tar -czf "$TAR_GZ" -C "$BUNDLE_DIR" "Volti.app"
           fi
 
           # Private key'i geçici dosyaya yaz — --private-key-path base64 kodlu içerik bekler,
@@ -101,7 +101,7 @@ jobs:
           rm -f /tmp/tauri_key.key
 
           SIG=$(cat "$SIG_FILE")
-          URL="https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/${TAG}/Arduino.Typing.Tutor_aarch64.app.tar.gz"
+          URL="https://github.com/mehmetakarim/Arduino-Typing-Tutor/releases/download/${TAG}/Volti_aarch64.app.tar.gz"
 
           jq -n \
             --arg version "$VERSION" \
